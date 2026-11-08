@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proefexamen — Meerkeuzevragen</title>
+<style>
+  :root {
+    --parchment: #f5f4ed;
+    --ink: #141413;
+    --terracotta: #c96442;
+    --terracotta-dark: #b0552f;
+    --marfim: #faf9f5;
+    --olive: #5e5d59;
+    --stone: #87867f;
+    --cream-border: #f0eee6;
+    --ok: #5f7a5f;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 100dvh;
+  }
+  header {
+    padding: 1.5rem 0 1rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  h1 { font-family: Georgia, serif; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+  .header-tools { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+  .counter { font-size: 0.875rem; font-weight: 500; letter-spacing: 0.04em; color: var(--olive); font-variant-numeric: tabular-nums; }
+  .progress-track { height: 3px; background: var(--cream-border); border-radius: 2px; overflow: hidden; }
+  .progress-bar { height: 100%; width: 0%; background: var(--terracotta); transition: width 300ms ease-out; }
+  main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 2rem 0 3rem; }
+  .btn {
+    font-family: Georgia, serif; font-weight: 600; font-size: 0.9375rem;
+    border-radius: 0.5rem; padding: 12px 20px; cursor: pointer;
+    transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease, filter 200ms ease;
+  }
+  .btn-primary { background: var(--terracotta); color: var(--marfim); border: none; }
+  .btn-primary:hover { filter: brightness(0.92); box-shadow: 0 4px 14px rgba(201, 100, 66, 0.28); transform: scale(1.03); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--olive); }
+  .btn-ghost:hover { background: var(--cream-border); }
+  .btn-ghost:active { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+
+  .panel {
+    margin: auto; max-width: 46rem; width: 100%;
+    background: var(--marfim); border: 1px solid var(--cream-border); border-radius: var(--radius);
+    box-shadow: 0 0 0 1px var(--cream-border), 0 2px 12px rgba(0, 0, 0, 0.06);
+    padding: clamp(1.5rem, 4vw, 3rem);
+  }
+  .panel.enter { animation: fadeUp 540ms ease-out; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  #emptyState { text-align: center; border-style: dashed; border-color: var(--stone); border-width: 1.5px; }
+  body.dragover .panel { border-color: var(--terracotta); background: #f3efe4; }
+  #emptyState svg { color: var(--terracotta); margin-bottom: 1rem; }
+  #emptyState h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+  #emptyState p { color: var(--olive); font-size: 0.9375rem; margin-bottom: 1.5rem; }
+
+  .setup-row { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin: 1.25rem 0 1.75rem; }
+  .setup-row label { font-size: 0.9375rem; color: var(--olive); font-weight: 500; }
+  select {
+    font-family: Georgia, serif; font-size: 0.9375rem; color: var(--ink);
+    background: var(--marfim); border: 1px solid var(--cream-border); border-radius: var(--radius);
+    padding: 0.45rem 0.7rem; box-shadow: 0 0 0 1px var(--cream-border);
+  }
+  .setup-info { color: var(--olive); font-size: 0.9375rem; margin-top: 0.5rem; }
+
+  .card-meta {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    margin-bottom: 0.75rem; font-size: 0.875rem; font-weight: 500; letter-spacing: 0.05em; color: var(--olive);
+  }
+  .card-meta .vid { color: var(--terracotta); }
+  #question { font-size: clamp(1.25rem, 3vw, 1.6rem); font-weight: 700; line-height: 1.4; letter-spacing: -0.01em; margin-bottom: 1.5rem; }
+  .options { display: flex; flex-direction: column; gap: 0.75rem; }
+  .option {
+    display: flex; gap: 0.9rem; align-items: baseline; text-align: left; width: 100%;
+    font-family: Georgia, serif; font-size: 1.0625rem; color: var(--ink);
+    background: var(--parchment); border: 1px solid var(--cream-border); border-radius: var(--radius);
+    padding: 0.9rem 1.1rem; cursor: pointer;
+    transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
+  }
+  .option:hover:not(:disabled) { border-color: var(--terracotta); transform: scale(1.01); }
+  .option:disabled { cursor: default; }
+  .option .letter {
+    font-weight: 700; color: var(--terracotta); min-width: 1.4rem;
+    border: 1.5px solid var(--terracotta); border-radius: 50%;
+    width: 1.7rem; height: 1.7rem; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 0.875rem; flex-shrink: 0; align-self: center;
+  }
+  .option.selected { border-color: var(--terracotta); background: #f3efe4; box-shadow: 0 0 0 1px var(--terracotta); }
+  .card-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.25rem; }
+  .nav-hint { font-size: 0.8125rem; color: var(--stone); letter-spacing: 0.03em; text-align: center; }
+
+  .score-big { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 700; color: var(--terracotta); line-height: 1.1; }
+  .score-sub { color: var(--olive); margin: 0.5rem 0 1.75rem; }
+  .review { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .review-item { border: 1px solid var(--cream-border); border-radius: var(--radius); padding: 1rem 1.25rem; background: var(--parchment); }
+  .review-item .rq { font-weight: 700; margin-bottom: 0.4rem; }
+  .review-item .ra { font-size: 0.9375rem; margin-bottom: 0.25rem; }
+  .review-item .ra.ok { color: var(--ok); }
+  .review-item .ra.wrong { color: var(--terracotta-dark); }
+  .review-item .re { font-size: 0.9375rem; color: var(--olive); border-top: 1px solid var(--cream-border); margin-top: 0.6rem; padding-top: 0.6rem; }
+  .badge { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; padding: 2px 10px; border-radius: 999px; margin-left: 0.5rem; vertical-align: middle; }
+  .badge.ok { background: #e6ede4; color: var(--ok); }
+  .badge.wrong { background: #f6e3db; color: var(--terracotta-dark); }
+  .result-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; }
+  @media (max-width: 768px) { .nav-hint { display: none; } .panel { max-width: 100%; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Proefexamen</h1>
+    <div class="header-tools">
+      <span class="counter" id="counter"></span>
+      <button class="btn btn-primary" id="loadBtn">Laad .md-bestand</button>
+      <input type="file" id="fileInput" accept=".md,.markdown,.txt" multiple hidden>
+    </div>
+  </header>
+  <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+  <main>
+    <div class="panel" id="emptyState">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/>
+      </svg>
+      <h2>Nog geen vragenbestand geladen</h2>
+      <p>Sleep je meerkeuze-<code>.md</code>-bestand hierheen, of kies het via de knop rechtsboven.</p>
+      <button class="btn btn-primary" id="emptyLoadBtn">Kies bestand</button>
+    </div>
+
+    <div class="panel" id="setupPanel" hidden>
+      <h2 style="font-size:1.5rem;">Klaar om te starten</h2>
+      <p class="setup-info" id="setupInfo"></p>
+      <div class="setup-row">
+        <label for="countSelect">Aantal vragen:</label>
+        <select id="countSelect">
+          <option value="10">10 vragen</option>
+          <option value="20" selected>20 vragen</option>
+          <option value="30">30 vragen</option>
+          <option value="all">Alle vragen</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" id="startBtn">Start proefexamen</button>
+    </div>
+
+    <div id="examArea" hidden>
+      <div class="card-meta">
+        <span id="qMeta"></span>
+        <span class="vid" id="qNr"></span>
+      </div>
+      <div class="panel" id="examPanel">
+        <div id="question"></div>
+        <div class="options" id="options"></div>
+      </div>
+      <div class="card-nav">
+        <span></span>
+        <span class="nav-hint">klik een antwoord &middot; nadien pas feedback in het overzicht</span>
+        <button class="btn btn-primary" id="nextBtn" disabled>Volgende &#8594;</button>
+      </div>
+    </div>
+
+    <div class="panel" id="resultPanel" hidden>
+      <div class="score-big" id="scoreBig"></div>
+      <p class="score-sub" id="scoreSub"></p>
+      <div class="review" id="review"></div>
+      <div class="result-actions">
+        <button class="btn btn-primary" id="retryBtn">Nieuw proefexamen</button>
+        <button class="btn btn-ghost" id="newFileBtn">Ander bestand laden</button>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+function parseMcMarkdown(text) {
+  const lines = text.split(/\r?\n/);
+  const questions = [];
+  let q = null;
+  const flush = () => {
+    if (q && q.options.length === 4 && q.answer) {
+      q.text = q.text.join(' ').trim();
+      questions.push(q);
+    }
+    q = null;
+  };
+  for (const line of lines) {
+    const h = line.match(/^#{1,2}\s+(.+?)\s*$/);
+    if (h) {
+      if (/^Vraag\s+\d+$/i.test(h[1])) {
+        flush();
+        q = { id: h[1], meta: '', text: [], options: [], answer: null, explanation: '' };
+      } else {
+        flush();
+      }
+      continue;
+    }
+    if (!q) continue;
+    let m;
+    if ((m = line.match(/^\*\*Hoofdstuk:\*\*\s*(.+)$/))) { q.meta = m[1].trim(); continue; }
+    if ((m = line.match(/^\*\*Antwoord:\*\*\s*([A-Da-d])\s*$/))) { q.answer = m[1].toUpperCase(); continue; }
+    if ((m = line.match(/^\*\*Uitleg:\*\*\s*(.+)$/))) { q.explanation = m[1]; continue; }
+    if ((m = line.match(/^-\s*([A-Da-d])\)\s*(.+)$/))) { q.options.push({ letter: m[1].toUpperCase(), text: m[2] }); continue; }
+    if (line.trim()) q.text.push(line.trim());
+  }
+  flush();
+  return questions;
+}
+
+function inlineMd(s) {
+  return s
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>');
+}
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+if (typeof document !== 'undefined') {
+  const $ = (id) => document.getElementById(id);
+  const emptyState = $('emptyState'), setupPanel = $('setupPanel'), examArea = $('examArea'), resultPanel = $('resultPanel');
+  const counter = $('counter'), progressBar = $('progressBar');
+  const setupInfo = $('setupInfo'), countSelect = $('countSelect');
+  const qMeta = $('qMeta'), qNr = $('qNr'), questionEl = $('question'), optionsEl = $('options'), nextBtn = $('nextBtn');
+  const scoreBig = $('scoreBig'), scoreSub = $('scoreSub'), reviewEl = $('review');
+  const fileInput = $('fileInput');
+
+  let allQuestions = [];
+  let exam = [];
+  let index = 0;
+  let answers = [];
+
+  function show(el) {
+    [emptyState, setupPanel, examArea, resultPanel].forEach((p) => { p.hidden = p !== el; });
+    if (el) { el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); }
+  }
+
+  async function addFiles(fileList) {
+    const files = [...fileList].filter((f) => /\.(md|markdown|txt)$/i.test(f.name)).sort((a, b) => a.name.localeCompare(b.name));
+    for (const f of files) {
+      const parsed = parseMcMarkdown(await f.text());
+      allQuestions = allQuestions.concat(parsed.map((q) => ({ ...q, file: f.name })));
+    }
+    if (allQuestions.length) {
+      setupInfo.textContent = allQuestions.length + ' vragen geladen (' + [...new Set(allQuestions.map((q) => q.file))].join(', ') + '). Kies hieronder het aantal vragen.';
+      show(setupPanel);
+    }
+  }
+
+  function startExam() {
+    const n = countSelect.value === 'all' ? allQuestions.length : Math.min(parseInt(countSelect.value, 10), allQuestions.length);
+    exam = shuffle(allQuestions).slice(0, n);
+    index = 0;
+    answers = [];
+    counter.textContent = '';
+    show(examArea);
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const q = exam[index];
+    counter.textContent = 'Vraag ' + (index + 1) + ' / ' + exam.length;
+    progressBar.style.width = ((index) / exam.length * 100) + '%';
+    qNr.textContent = q.id;
+    qMeta.textContent = (q.file ? q.file.replace(/\.md$/i, '') + ' — ' : '') + (q.meta || '');
+    questionEl.innerHTML = inlineMd(q.text);
+    optionsEl.innerHTML = '';
+    const letters = ['A', 'B', 'C', 'D'];
+    shuffle(q.options).forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option';
+      btn.innerHTML = '<span class="letter">' + letters[i] + '</span><span>' + inlineMd(opt.text) + '</span>';
+      btn.addEventListener('click', () => {
+        if (answers[index]) return;
+        answers[index] = { letter: letters[i], correct: opt.letter === q.answer, text: opt.text };
+        [...optionsEl.children].forEach((c) => { c.disabled = true; });
+        btn.classList.add('selected');
+        nextBtn.disabled = false;
+        nextBtn.textContent = index === exam.length - 1 ? 'Bekijk resultaat' : 'Volgende \u2192';
+      });
+      optionsEl.appendChild(btn);
+    });
+    nextBtn.disabled = true;
+    nextBtn.textContent = 'Volgende \u2192';
+    const panel = $('examPanel');
+    panel.classList.remove('enter'); void panel.offsetWidth; panel.classList.add('enter');
+  }
+
+  function finishExam() {
+    progressBar.style.width = '100%';
+    counter.textContent = exam.length + ' / ' + exam.length;
+    const correct = answers.filter((a) => a && a.correct).length;
+    scoreBig.textContent = correct + ' / ' + exam.length;
+    scoreSub.textContent = Math.round((correct / exam.length) * 100) + '% correct';
+    reviewEl.innerHTML = '';
+    exam.forEach((q, i) => {
+      const a = answers[i];
+      const item = document.createElement('div');
+      item.className = 'review-item';
+      const correctOpt = q.options.find((o) => o.letter === q.answer);
+      const ok = a && a.correct;
+      let html = '<div class="rq">' + (i + 1) + '. ' + inlineMd(q.text) +
+        '<span class="badge ' + (ok ? 'ok' : 'wrong') + '">' + (ok ? 'JUIST' : 'FOUT') + '</span></div>';
+      html += '<div class="ra ' + (ok ? 'ok' : 'wrong') + '">Jouw antwoord: ' + (a ? a.letter + ') ' + inlineMd(a.text) : 'geen antwoord') + '</div>';
+      if (!ok) html += '<div class="ra ok">Juiste antwoord: ' + q.answer + ') ' + inlineMd(correctOpt.text) + '</div>';
+      if (!ok && q.explanation) html += '<div class="re">' + inlineMd(q.explanation) + '</div>';
+      item.innerHTML = html;
+      reviewEl.appendChild(item);
+    });
+    show(resultPanel);
+  }
+
+  $('loadBtn').addEventListener('click', () => fileInput.click());
+  $('emptyLoadBtn').addEventListener('click', () => fileInput.click());
+  $('newFileBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => { addFiles(fileInput.files); fileInput.value = ''; });
+  window.addEventListener('dragover', (e) => { e.preventDefault(); document.body.classList.add('dragover'); });
+  window.addEventListener('dragleave', (e) => { if (e.relatedTarget === null) document.body.classList.remove('dragover'); });
+  window.addEventListener('drop', (e) => {
+    e.preventDefault();
+    document.body.classList.remove('dragover');
+    if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+  $('startBtn').addEventListener('click', startExam);
+  $('retryBtn').addEventListener('click', startExam);
+  nextBtn.addEventListener('click', () => {
+    if (index < exam.length - 1) { index++; renderQuestion(); }
+    else finishExam();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!examArea.hidden && (e.key === 'ArrowRight' || e.key === 'Enter') && !nextBtn.disabled) nextBtn.click();
+  });
+}
+</script>
+</body>
+</html>
