@@ -63,6 +63,15 @@
     gap: 0.75rem;
     flex-wrap: wrap;
   }
+  .navlink {
+    font-size: 0.875rem;
+    color: var(--olive);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--cream-border);
+    padding-bottom: 1px;
+  }
+  .navlink:hover { color: var(--terracotta); border-color: var(--terracotta); }
   .counter {
     font-size: 0.875rem;
     font-weight: 500;
@@ -221,6 +230,7 @@
   <header>
     <div class="brand"><img class="logo" src="logo.png" alt="paprikasix"><h1>Flashcards</h1></div>
     <div class="header-tools">
+      <a class="navlink" href="tools.html">&#127968; Tools</a>
       <span class="counter" id="counter">0 / 0</span>
       <select id="deckSelect" hidden></select>
       <button class="btn btn-primary" id="loadBtn">Laad .md-bestanden</button>
