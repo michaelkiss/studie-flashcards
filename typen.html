@@ -257,15 +257,19 @@
 
   #typeInput {
     width: 100%;
+    min-height: 6rem;
     font-family: Georgia, serif;
-    font-size: 1.0625rem;
+    font-size: 1.25rem;
+    line-height: 1.5;
     color: var(--ink);
     background: var(--parchment);
     border: 1px solid var(--cream-border);
     border-radius: var(--radius);
-    padding: 0.7rem 0.9rem;
+    padding: 0.8rem 1rem;
     box-shadow: 0 0 0 1px var(--cream-border);
     margin-bottom: 0.6rem;
+    resize: none;
+    overflow: hidden;
   }
   #typeInput:focus { outline: 2px solid var(--terracotta); outline-offset: -1px; }
   .auto-bar-track {
@@ -369,6 +373,23 @@
   .badge.ok { background: #e6ede4; color: var(--ok); }
   .badge.hint { background: #f6e3db; color: var(--terracotta-dark); }
   .result-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; }
+  #pauseMask {
+    position: fixed;
+    inset: 0;
+    background: var(--parchment);
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #pauseMask .pause-inner { text-align: center; padding: 1.5rem; }
+  #pauseMask .pause-big {
+    font-size: clamp(2rem, 7vw, 3.2rem);
+    font-weight: 700;
+    color: var(--terracotta);
+    margin-bottom: 0.5rem;
+  }
+  #pauseMask p { color: var(--olive); margin-bottom: 1.5rem; }
   .hidden { display: none; }
   @media (max-width: 768px) {
     .nav-hint { display: none; }
@@ -379,6 +400,13 @@
 <body>
 <canvas id="confetti"></canvas>
 <div id="celebrate"><div class="big" id="celebrateText"></div></div>
+<div id="pauseMask" class="hidden">
+  <div class="pause-inner">
+    <div class="pause-big">&#9208;&#65039; Gepauzeerd</div>
+    <p>De tekst is verborgen &mdash; neem je pauze.</p>
+    <button class="btn btn-primary" id="resumeBtn">Verder &#9654;</button>
+  </div>
+</div>
 <div class="container">
   <header>
     <h1>Typen</h1>
@@ -435,7 +463,7 @@
       </div>
       <div class="panel enter" id="practicePanel">
         <div id="question"></div>
-        <input type="text" id="typeInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Typ hier het antwoord…">
+        <textarea id="typeInput" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Typ hier het antwoord…"></textarea>
         <div class="auto-bar-track"><div id="autoBar"></div></div>
         <div class="chips" id="chips"></div>
         <div class="status-line" id="statusLine"></div>
@@ -446,8 +474,8 @@
         </div>
       </div>
       <div class="card-nav">
-        <span></span>
-        <span class="nav-hint">elk voltooid woord wordt meteen gecheckt &middot; Enter = volgende kaart als alles klopt</span>
+        <button class="btn btn-ghost" id="pauseBtn">&#9208;&#65039; Pauzeer</button>
+        <span class="nav-hint">elk voltooid woord wordt meteen gecheckt &middot; Enter = volgende kaart als alles klopt &middot; pauze verbergt de tekst</span>
         <span></span>
       </div>
     </div>
@@ -498,6 +526,9 @@ let streak = 0;
 let bestStreak = 0;
 let muted = localStorage.getItem(LS_MUTED) === '1';
 let idleTimer = null;
+let revealTimer = null;
+let revealing = false;
+let paused = false;
 
 const PHRASES = ['Lekker!', 'Top!', 'Door!', 'Gelukt!', 'Mooi zo!', '🔥 Knaller!'];
 
@@ -658,9 +689,10 @@ $('backBtn').onclick = () => {
   clearTimeout(idleTimer);
   renderDeck();
 };
-$('nextWordBtn').onclick = () => fillNextWord(true);
+$('nextWordBtn').onclick = () => startReveal(true);
 $('revealBtn').onclick = () => {
-  if (!session || session.done) return;
+  if (!session || session.done || paused) return;
+  cancelReveal();
   const expected = wordsOf(session.card.a);
   for (let i = 0; i < expected.length; i++) session.autoIdx.add(i);
   $('typeInput').value = expected.join(' ') + ' ';
@@ -671,10 +703,11 @@ $('revealBtn').onclick = () => {
 };
 $('nextBtn').onclick = () => advance();
 $('typeInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
+    if (!session) return;
     const chk = checkWords(wordsOf(session.card.a), wordsOf($('typeInput').value));
-    if (chk.allOk && session && session.done) advance();
+    if (chk.allOk && session.done) advance();
     else {
       $('practicePanel').classList.add('shake');
       setTimeout(() => $('practicePanel').classList.remove('shake'), 340);
@@ -682,7 +715,39 @@ $('typeInput').addEventListener('keydown', (e) => {
     }
   }
 });
-$('typeInput').addEventListener('input', () => { renderChips(); resetIdle(); });
+$('typeInput').addEventListener('input', () => {
+  if (revealing) cancelReveal();
+  autoGrow();
+  renderChips();
+  resetIdle();
+});
+function autoGrow() {
+  const el = $('typeInput');
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight || 96, 320) + 'px';
+}
+$('pauseBtn').onclick = () => pausePractice();
+$('resumeBtn').onclick = () => resumePractice();
+document.addEventListener('visibilitychange', () => { if (document.hidden) pausePractice(); });
+
+function pausePractice() {
+  if (!session || session.done || paused) return;
+  paused = true;
+  clearTimeout(idleTimer);
+  cancelReveal();
+  $('pauseMask').classList.remove('hidden');
+  $('pauseBtn').innerHTML = '&#9654;&#65039; Verder';
+  beep(330, 0.1, 'sine', 0.08);
+}
+function resumePractice() {
+  if (!paused) return;
+  paused = false;
+  $('pauseMask').classList.add('hidden');
+  $('pauseBtn').innerHTML = '&#9208;&#65039; Pauzeer';
+  beep(520, 0.1, 'sine', 0.08);
+  resetIdle();
+  $('typeInput').focus();
+}
 $('muteBtn').onclick = () => {
   muted = !muted;
   localStorage.setItem(LS_MUTED, muted ? '1' : '0');
@@ -704,7 +769,7 @@ function resetIdle() {
   clearTimeout(idleTimer);
   const bar = $('autoBar');
   const ms = autoDelayMs();
-  if (!ms || !session || session.done) {
+  if (!ms || !session || session.done || paused) {
     bar.style.transition = 'none';
     bar.style.width = '0%';
     return;
@@ -714,26 +779,52 @@ function resetIdle() {
   void bar.offsetWidth;
   bar.style.transition = 'width ' + ms + 'ms linear';
   bar.style.width = '0%';
-  idleTimer = setTimeout(() => fillNextWord(false), ms);
+  idleTimer = setTimeout(() => startReveal(false), ms);
 }
 
-function fillNextWord(manual) {
-  if (!session || session.done) return;
+function cancelReveal() {
+  if (revealTimer) clearTimeout(revealTimer);
+  revealTimer = null;
+  revealing = false;
+}
+
+function startReveal(manual) {
+  if (!session || session.done || paused) return;
   const expected = wordsOf(session.card.a);
   const v = $('typeInput').value;
   const t = v.trim();
   const completed = t === '' ? [] : t.split(/\s+/);
   const pos = Math.min(currentPos(expected, completed), expected.length - 1);
   if (pos >= expected.length) return;
+  cancelReveal();
+  clearTimeout(idleTimer);
+  const base = expected.slice(0, pos).join(' ');
   const rest = completed.slice(pos + 1);
-  $('typeInput').value = expected.slice(0, pos + 1).join(' ') + (rest.length ? ' ' + rest.join(' ') : '') + ' ';
+  const word = expected[pos];
   session.autoIdx.add(pos);
-  score += 2;
-  updateScore(true);
-  $('statusLine').textContent = (manual ? 'Handmatig : ' : 'Auto-ingevuld: ') + '\u201c' + expected[pos] + '\u201d';
-  sfxAuto();
-  renderChips();
-  resetIdle();
+  revealing = true;
+  let k = 0;
+  const step = () => {
+    if (paused) { revealing = false; return; }
+    k++;
+    const partial = word.slice(0, k);
+    $('typeInput').value = (base ? base + ' ' : '') + partial + (rest.length ? ' ' + rest.join(' ') : '') + (k >= word.length ? ' ' : '');
+    $('statusLine').textContent = (manual ? 'Woord ' : 'Auto-woord ') + (pos + 1) + ' van ' + expected.length + ': ' + partial + (k < word.length ? '\u2026' : '');
+    autoGrow();
+    if (k >= word.length) {
+      revealing = false;
+      score += 2;
+      updateScore(true);
+      sfxAuto();
+      renderChips();
+      resetIdle();
+    } else {
+      beep(660 + k * 50, 0.035, 'sine', 0.05);
+      renderChips();
+      revealTimer = setTimeout(step, 320);
+    }
+  };
+  step();
 }
 
 /* ---- sessie ---- */
@@ -743,6 +834,10 @@ function startSession(cards) {
   score = 0;
   streak = 0;
   bestStreak = 0;
+  paused = false;
+  cancelReveal();
+  $('pauseMask').classList.add('hidden');
+  $('pauseBtn').innerHTML = '&#9208;&#65039; Pauzeer';
   updateScore(false);
   $('streak').textContent = '';
   $('deckPanel').classList.add('hidden');
@@ -754,6 +849,7 @@ function startSession(cards) {
 
 function nextItem() {
   clearTimeout(idleTimer);
+  cancelReveal();
   const item = queue.find(it => !it.done);
   if (!item) { finishSession(); return; }
   session = item;
