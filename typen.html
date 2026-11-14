@@ -302,6 +302,25 @@
   }
   .part-input:focus { outline: 2px solid var(--terracotta); outline-offset: -1px; }
   .part-block.done .part-input { border-color: var(--ok); background: #f2f5ef; }
+  .part-wrap { position: relative; }
+  .ghost {
+    position: absolute;
+    top: 1px; left: 1px; right: 1px; bottom: 1px;
+    padding: 0.7rem 0.9rem;
+    font-family: Georgia, serif;
+    font-size: 1.15rem;
+    line-height: 1.5;
+    color: #d7d5c9;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .part-block.schrijven .part-input { background: transparent; }
+  .part-block.done .ghost { opacity: 0.35; }
+  .seg { display: inline-flex; border: 1px solid var(--cream-border); border-radius: var(--radius); overflow: hidden; background: var(--marfim); box-shadow: 0 0 0 1px var(--cream-border); }
+  .seg-btn { font-family: Georgia, serif; font-size: 0.875rem; padding: 0.45rem 0.8rem; border: none; background: transparent; color: var(--olive); cursor: pointer; }
+  .seg-btn.active { background: var(--terracotta); color: var(--marfim); font-weight: 700; }
   .auto-bar-track {
     height: 3px;
     background: var(--cream-border);
@@ -456,7 +475,7 @@
 
     <div class="panel" id="deckPanel">
       <h2>Kaarten aanmaken</h2>
-      <p class="intro">Plak een vraag en het antwoord &mdash; druk op <strong>Enter</strong> om de kaart toe te voegen. Bestaat het antwoord uit <strong>meerdere onderdelen</strong>? Voeg dan extra velden toe: elk onderdeel wordt apart geoefend en apart gecheckt.</p>
+      <p class="intro">Plak een vraag en het antwoord &mdash; druk op <strong>Enter</strong> om de kaart toe te voegen. Bestaat het antwoord uit <strong>meerdere onderdelen</strong>? Voeg dan extra velden toe: elk onderdeel wordt apart geoefend en apart gecheckt. Kies per kaart de <strong>oefenmodus</strong>: los typen, of schrijven waarbij het antwoord in licht grijs onder je tekst staat.</p>
       <form class="deck-form" id="deckForm" onsubmit="return addCard(event)">
         <div class="field">
           <label for="qInput">Vraag</label>
@@ -475,6 +494,13 @@
           <span class="form-hint">Enter in een antwoordveld = kaart toevoegen</span>
         </div>
       </form>
+      <div class="setting-row">
+        <label>Oefenmodus:</label>
+        <div class="seg">
+          <button type="button" class="seg-btn active" id="modeLos">&#9000;&#65039; Los typen</button>
+          <button type="button" class="seg-btn" id="modeSchrijven">&#9999;&#65039; Schrijven (grijs)</button>
+        </div>
+      </div>
       <div class="setting-row">
         <label for="autoDelay">Auto-woord als je blijft hangen na:</label>
         <select id="autoDelay">
@@ -599,6 +625,7 @@ function loadDeck() {
         delete c.a;
         changed = true;
       }
+      if (c.mode !== 'schrijven' && c.mode !== 'los') { c.mode = 'los'; changed = true; }
       const parts = c.parts.filter(p => typeof p === 'string' && norm(p) !== '').map(p => norm(p));
       if (parts.length !== c.parts.length) changed = true;
       c.parts = parts;
@@ -759,6 +786,11 @@ function renderDeck() {
     da.textContent = c.parts.join('  \u00b7  ') + (c.parts.length > 1 ? '  (' + c.parts.length + ' onderdelen)' : '');
     grow.appendChild(dq);
     grow.appendChild(da);
+    const modeBtn = document.createElement('button');
+    modeBtn.className = 'del mode-btn';
+    modeBtn.textContent = c.mode === 'schrijven' ? '\u270D\uFE0F' : '\u2328\uFE0F';
+    modeBtn.title = c.mode === 'schrijven' ? 'Modus: schrijven (grijs) \u2014 klik om te wisselen' : 'Modus: los typen \u2014 klik om te wisselen';
+    modeBtn.onclick = () => { c.mode = c.mode === 'schrijven' ? 'los' : 'schrijven'; saveDeck(); renderDeck(); };
     const st = document.createElement('button');
     st.className = 'del stat-btn';
     st.textContent = '\u{1F4CA}';
@@ -771,6 +803,7 @@ function renderDeck() {
     del.onclick = () => { delete stats[c.id]; saveStats(); deck.splice(i, 1); saveDeck(); renderDeck(); };
     item.appendChild(nr);
     item.appendChild(grow);
+    item.appendChild(modeBtn);
     item.appendChild(st);
     item.appendChild(del);
     list.appendChild(item);
@@ -790,7 +823,7 @@ function addCard(e) {
     setTimeout(() => $('deckPanel').classList.remove('shake'), 340);
     return false;
   }
-  deck.push({ q, parts, id: uid() });
+  deck.push({ q, parts, id: uid(), mode: modeDraft });
   saveDeck();
   $('qInput').value = '';
   $('partsInputs').innerHTML = '';
@@ -800,6 +833,14 @@ function addCard(e) {
   return false;
 }
 
+let modeDraft = 'los';
+function setModeDraft(m) {
+  modeDraft = m;
+  $('modeLos').classList.toggle('active', m === 'los');
+  $('modeSchrijven').classList.toggle('active', m === 'schrijven');
+}
+$('modeLos').onclick = () => setModeDraft('los');
+$('modeSchrijven').onclick = () => setModeDraft('schrijven');
 $('addPartBtn').onclick = () => {
   const ta = addPartInput('');
   ta.focus();
@@ -893,7 +934,7 @@ function resetIdle() {
   clearTimeout(idleTimer);
   const bar = $('autoBar');
   const ms = autoDelayMs();
-  if (!ms || !session || session.done || paused) {
+  if (!ms || !session || session.done || paused || session.card.mode === 'schrijven') {
     bar.style.transition = 'none';
     bar.style.width = '0%';
     return;
@@ -950,6 +991,7 @@ function nextItem() {
   $('progressBar').style.width = Math.round((done / queue.length) * 100) + '%';
   buildPartsUI();
   renderChips();
+  $('statusLine').textContent = session.card.mode === 'schrijven' ? 'Schrijf over de lichtgrijze tekst (auto-woord staat uit).' : '';
   resetIdle();
   setTimeout(() => session.partEls[0] && session.partEls[0].ta.focus(), 50);
 }
@@ -980,8 +1022,18 @@ function buildPartsUI() {
     });
     const chips = document.createElement('div');
     chips.className = 'chips';
+    const wrap = document.createElement('div');
+    wrap.className = 'part-wrap';
+    if (session.card.mode === 'schrijven') {
+      block.classList.add('schrijven');
+      const ghost = document.createElement('div');
+      ghost.className = 'ghost';
+      ghost.textContent = p;
+      wrap.appendChild(ghost);
+    }
+    wrap.appendChild(ta);
     block.appendChild(lbl);
-    block.appendChild(ta);
+    block.appendChild(wrap);
     block.appendChild(chips);
     area.appendChild(block);
     session.partEls.push({ ta, chips, lbl, block });
@@ -1064,7 +1116,7 @@ function renderChips() {
     session.partEls[pi].lbl.classList.toggle('done', done);
   });
   if (newOk > 0) {
-    score += newOk * 10;
+    score += newOk * (session.card.mode === 'schrijven' ? 5 : 10);
     updateScore(true);
     sfxCorrect();
   }
@@ -1130,7 +1182,7 @@ function recordAttempt(it) {
     t: Date.now(),
     dur: Math.max(1, Math.round((Date.now() - (it.startedAt || Date.now())) / 1000)),
     auto: it.autoIdx.size,
-    perfect: it.autoIdx.size === 0
+    perfect: it.autoIdx.size === 0 && it.card.mode !== 'schrijven'
   });
   if (arr.length > 100) arr.shift();
   saveStats();
@@ -1140,7 +1192,7 @@ function completeCard() {
   session.done = true;
   clearTimeout(idleTimer);
   recordAttempt(session);
-  const perfect = session.autoIdx.size === 0;
+  const perfect = session.autoIdx.size === 0 && session.card.mode !== 'schrijven';
   if (perfect) {
     streak++;
     bestStreak = Math.max(bestStreak, streak);
@@ -1190,7 +1242,8 @@ function finishSession() {
     rq.className = 'rq';
     rq.textContent = it.card.q;
     const badge = document.createElement('span');
-    if (it.autoIdx.size === 0) { badge.className = 'badge ok'; badge.textContent = 'perfect'; }
+    if (it.card.mode === 'schrijven') { badge.className = 'badge hint'; badge.textContent = 'schrijven'; }
+    else if (it.autoIdx.size === 0) { badge.className = 'badge ok'; badge.textContent = 'perfect'; }
     else { badge.className = 'badge hint'; badge.textContent = it.autoIdx.size + ' auto-woord' + (it.autoIdx.size > 1 ? 'en' : ''); }
     rq.appendChild(badge);
     const ra = document.createElement('div');
