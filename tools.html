@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<title>paprikasix &mdash; mijn tools</title>
+<style>
+  :root {
+    --parchment: #f5f4ed;
+    --ink: #141413;
+    --terracotta: #c96442;
+    --terracotta-dark: #b0552f;
+    --marfim: #faf9f5;
+    --olive: #5e5d59;
+    --stone: #87867f;
+    --cream-border: #f0eee6;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 100dvh;
+  }
+  header {
+    padding: 1.5rem 0 1rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  h1 {
+    font-family: Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .brand { display: flex; align-items: center; gap: 0.6rem; }
+  .logo { height: 2.25rem; width: auto; display: block; }
+  .header-tools { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+  .navlink {
+    font-size: 0.875rem;
+    color: var(--olive);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--cream-border);
+    padding-bottom: 1px;
+  }
+  .navlink:hover { color: var(--terracotta); border-color: var(--terracotta); }
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem 0 3rem;
+  }
+  .intro {
+    width: 100%;
+    max-width: 52rem;
+    margin: 0 auto 1.75rem;
+    color: var(--olive);
+    font-size: 1.0625rem;
+  }
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
+    width: 100%;
+    max-width: 52rem;
+    margin: 0 auto;
+  }
+  a.tool-card {
+    display: block;
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--marfim);
+    border: 1px solid var(--cream-border);
+    border-radius: var(--radius);
+    box-shadow: 0 0 0 1px var(--cream-border), 0 2px 12px rgba(0, 0, 0, 0.06);
+    padding: 1.5rem;
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  }
+  a.tool-card:hover {
+    transform: scale(1.02);
+    border-color: var(--terracotta);
+    box-shadow: 0 0 0 1px var(--terracotta), 0 6px 18px rgba(201, 100, 66, 0.18);
+  }
+  .tool-card .emoji { font-size: 2.2rem; display: block; margin-bottom: 0.6rem; }
+  .tool-card h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.35rem; }
+  .tool-card p { color: var(--olive); font-size: 0.9375rem; }
+  .tool-card .go {
+    color: var(--terracotta);
+    font-weight: 700;
+    font-size: 0.875rem;
+    display: inline-block;
+    margin-top: 0.9rem;
+  }
+  .foot-note {
+    text-align: center;
+    color: var(--stone);
+    font-size: 0.8125rem;
+    letter-spacing: 0.03em;
+    margin-top: 2.5rem;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="brand"><img class="logo" src="logo.png" alt="paprikasix"><h1>Mijn tools</h1></div>
+    <div class="header-tools"></div>
+  </header>
+  <main>
+    <p class="intro">Alles op &eacute;&eacute;n plek. Kies een tool om te starten &mdash; je gegevens blijven in deze browser bewaard.</p>
+    <div class="tool-grid">
+      <a class="tool-card" href="index.html">
+        <span class="emoji">&#128‡;&#65039;</span>
+        <h2>Flashcards</h2>
+        <p>Steekkaarten laden uit Q&amp;A-<code>.md</code>-bestanden en doorlopen met pijltjes of scroll.</p>
+        <span class="go">Openen &#8594;</span>
+      </a>
+      <a class="tool-card" href="exam.html">
+        <span class="emoji">&#128221;</span>
+        <h2>Proefexamen</h2>
+        <p>Meerkeuzevragen oefenen uit <code>.md</code>-bestanden, met shuffle en eindscore.</p>
+        <span class="go">Openen &#8594;</span>
+      </a>
+      <a class="tool-card" href="typen.html">
+        <span class="emoji">&#8984;&#65039;</span>
+        <h2>Typen</h2>
+        <p>Antwoorden woord voor woord reproduceren: auto-woord bij haperen, pauze-mask, per-kaart statistieken.</p>
+        <span class="go">Openen &#8594;</span>
+      </a>
+    </div>
+    <p class="foot-note">paprikasix &middot; data blijft lokaal in je browser (localStorage)</p>
+  </main>
+</div>
+</body>
+</html>

@@ -53,6 +53,8 @@
   .brand { display: flex; align-items: center; gap: 0.6rem; }
   .logo { height: 2.25rem; width: auto; display: block; }
   .header-tools { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+  .navlink { font-size: 0.875rem; color: var(--olive); text-decoration: none; letter-spacing: 0.03em; border-bottom: 1px solid var(--cream-border); padding-bottom: 1px; }
+  .navlink:hover { color: var(--terracotta); border-color: var(--terracotta); }
   .counter { font-size: 0.875rem; font-weight: 500; letter-spacing: 0.04em; color: var(--olive); font-variant-numeric: tabular-nums; }
   .progress-track { height: 3px; background: var(--cream-border); border-radius: 2px; overflow: hidden; }
   .progress-bar { height: 100%; width: 0%; background: var(--terracotta); transition: width 300ms ease-out; }
@@ -140,6 +142,7 @@
   <header>
     <div class="brand"><img class="logo" src="logo.png" alt="paprikasix"><h1>Proefexamen</h1></div>
     <div class="header-tools">
+      <a class="navlink" href="tools.html">&#127968; Tools</a>
       <span class="counter" id="counter"></span>
       <button class="btn btn-primary" id="loadBtn">Laad .md-bestand</button>
       <input type="file" id="fileInput" accept=".md,.markdown,.txt" multiple hidden>
