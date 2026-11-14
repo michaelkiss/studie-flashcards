@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typen &mdash; woord voor woord</title>
+<style>
+  :root {
+    --parchment: #f5f4ed;
+    --ink: #141413;
+    --terracotta: #c96442;
+    --terracotta-dark: #b0552f;
+    --marfim: #faf9f5;
+    --olive: #5e5d59;
+    --stone: #87867f;
+    --cream-border: #f0eee6;
+    --ok: #5f7a5f;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+  .container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 100dvh;
+  }
+  header {
+    padding: 1.5rem 0 1rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  h1 {
+    font-family: Georgia, serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .header-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .navlink {
+    font-size: 0.875rem;
+    color: var(--olive);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid var(--cream-border);
+    padding-bottom: 1px;
+  }
+  .navlink:hover { color: var(--terracotta); border-color: var(--terracotta); }
+  .counter {
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--olive);
+    font-variant-numeric: tabular-nums;
+  }
+  .progress-track {
+    height: 3px;
+    background: var(--cream-border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--terracotta);
+    transition: width 300ms ease-out;
+  }
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem 0 3rem;
+  }
+  .btn {
+    font-family: Georgia, serif;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    border-radius: 0.5rem;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease, filter 200ms ease;
+  }
+  .btn-primary {
+    background: var(--terracotta);
+    color: var(--marfim);
+    border: none;
+  }
+  .btn-primary:hover { filter: brightness(0.92); box-shadow: 0 4px 14px rgba(201, 100, 66, 0.28); transform: scale(1.03); }
+  .btn-primary:active { transform: translateY(1px); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--ink);
+    border: 1.5px solid var(--olive);
+  }
+  .btn-ghost:hover { background: var(--cream-border); }
+  .btn-ghost:active { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+
+  .panel {
+    width: 100%;
+    max-width: 46rem;
+    margin: 0 auto;
+    background: var(--marfim);
+    border-radius: var(--radius);
+    border: 1px solid var(--cream-border);
+    box-shadow: 0 0 0 1px var(--cream-border), 0 2px 12px rgba(0, 0, 0, 0.06);
+    padding: clamp(1.5rem, 4vw, 3rem);
+  }
+  .panel.enter { animation: fadeUp 540ms ease-out; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .panel h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .panel .intro { color: var(--olive); font-size: 0.9375rem; margin-bottom: 1.5rem; max-width: 60ch; }
+
+  .card-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--olive);
+  }
+  .card-meta .vid { color: var(--terracotta); }
+  #question {
+    font-size: clamp(1.375rem, 3vw, 1.75rem);
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+    margin-bottom: 1.5rem;
+  }
+
+  form.deck-form { display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 1.5rem; }
+  .field label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--olive);
+    margin-bottom: 0.35rem;
+  }
+  .field input, .field textarea {
+    width: 100%;
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    color: var(--ink);
+    background: var(--parchment);
+    border: 1px solid var(--cream-border);
+    border-radius: var(--radius);
+    padding: 0.6rem 0.8rem;
+    box-shadow: 0 0 0 1px var(--cream-border);
+    resize: vertical;
+  }
+  .field input:focus, .field textarea:focus { outline: 2px solid var(--terracotta); outline-offset: -1px; }
+  .form-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+  .form-hint { font-size: 0.8125rem; color: var(--stone); letter-spacing: 0.03em; }
+
+  .deck-list { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.5rem; }
+  .deck-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+    background: var(--parchment);
+    border: 1px solid var(--cream-border);
+    border-radius: var(--radius);
+    padding: 0.7rem 1rem;
+  }
+  .deck-item .nr {
+    font-weight: 700;
+    color: var(--terracotta);
+    min-width: 1.6rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .deck-item .grow { flex: 1; min-width: 0; }
+  .deck-item .dq { font-weight: 700; font-size: 0.9375rem; }
+  .deck-item .da { color: var(--olive); font-size: 0.875rem; }
+  .del {
+    border: none;
+    background: none;
+    color: var(--stone);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 6px;
+    line-height: 1;
+  }
+  .del:hover { color: var(--terracotta-dark); background: var(--cream-border); }
+
+  .stage-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--terracotta);
+    margin-bottom: 0.75rem;
+  }
+  .stage-desc { color: var(--olive); font-size: 0.9375rem; margin-bottom: 1.25rem; max-width: 62ch; }
+
+  .placed, .bank { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .placed {
+    min-height: 3.2rem;
+    padding: 0.6rem;
+    border: 1.5px dashed var(--stone);
+    border-radius: var(--radius);
+    margin-bottom: 1rem;
+    background: var(--parchment);
+  }
+  .placed:empty::after {
+    content: "Klik op woorden hieronder om ze hier in de juiste volgorde te zetten…";
+    color: var(--stone);
+    font-size: 0.875rem;
+    font-style: italic;
+  }
+  .bank { margin-bottom: 1.25rem; }
+  .tile {
+    font-family: Georgia, serif;
+    font-size: 1rem;
+    color: var(--ink);
+    background: var(--marfim);
+    border: 1px solid var(--cream-border);
+    border-radius: var(--radius);
+    padding: 0.45rem 0.9rem;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px var(--cream-border), 0 1px 4px rgba(0, 0, 0, 0.05);
+    transition: border-color 200ms ease, transform 200ms ease, background 200ms ease;
+  }
+  .tile:hover { border-color: var(--terracotta); transform: scale(1.04); }
+  .tile.placed-tile { background: #f3efe4; border-color: var(--terracotta); }
+  .tile.placed-tile:hover { border-color: var(--terracotta-dark); }
+
+  #typeInput {
+    width: 100%;
+    font-family: Georgia, serif;
+    font-size: 1.0625rem;
+    color: var(--ink);
+    background: var(--parchment);
+    border: 1px solid var(--cream-border);
+    border-radius: var(--radius);
+    padding: 0.7rem 0.9rem;
+    box-shadow: 0 0 0 1px var(--cream-border);
+    margin-bottom: 0.9rem;
+  }
+  #typeInput:focus { outline: 2px solid var(--terracotta); outline-offset: -1px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.25rem; min-height: 1.6rem; }
+  .chip {
+    font-size: 0.9375rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--cream-border);
+    background: var(--parchment);
+  }
+  .chip.ok { background: #e6ede4; border-color: var(--ok); color: var(--ok); }
+  .chip.bad { background: #f6e3db; border-color: var(--terracotta-dark); color: var(--terracotta-dark); text-decoration: line-through; }
+  .chip.cur { border-style: dashed; color: var(--olive); }
+  .hint-line {
+    min-height: 1.6rem;
+    font-size: 0.9375rem;
+    color: var(--terracotta-dark);
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+  .type-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+  .reveal {
+    display: none;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--cream-border);
+    font-size: 1.0625rem;
+    line-height: 1.6;
+  }
+  .reveal.show { display: block; animation: fadeUp 400ms ease-out; }
+  .reveal .rlabel { font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--olive); margin-bottom: 0.35rem; }
+
+  .card-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+  .nav-hint {
+    font-size: 0.8125rem;
+    color: var(--stone);
+    letter-spacing: 0.03em;
+    text-align: center;
+  }
+  .shake { animation: shake 320ms ease; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .score-big { font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 700; color: var(--terracotta); line-height: 1.1; }
+  .score-sub { color: var(--olive); margin: 0.5rem 0 1.75rem; }
+  .review { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+  .review-item { border: 1px solid var(--cream-border); border-radius: var(--radius); padding: 1rem 1.25rem; background: var(--parchment); }
+  .review-item .rq { font-weight: 700; margin-bottom: 0.4rem; }
+  .review-item .ra { font-size: 0.9375rem; color: var(--olive); }
+  .badge { display: inline-block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; padding: 2px 10px; border-radius: 999px; margin-left: 0.5rem; vertical-align: middle; }
+  .badge.ok { background: #e6ede4; color: var(--ok); }
+  .badge.hint { background: #f6e3db; color: var(--terracotta-dark); }
+  .result-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1.75rem; }
+  .hidden { display: none; }
+  @media (max-width: 768px) {
+    .nav-hint { display: none; }
+    .panel { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Typen</h1>
+    <div class="header-tools">
+      <a class="navlink" href="index.html">Flashcards</a>
+      <a class="navlink" href="exam.html">Proefexamen</a>
+      <span class="counter" id="counter"></span>
+    </div>
+  </header>
+  <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+  <main>
+
+    <div class="panel" id="deckPanel">
+      <h2>Kaarten aanmaken</h2>
+      <p class="intro">Plak een vraag en het bijhorende antwoord. Druk nadien op <strong>Enter</strong> om de kaart toe te voegen. Daarna start je de oefening: je ziet enkel de vraag en typt het antwoord <strong>woord voor woord</strong> &mdash; in drie progressieve stappen.</p>
+      <form class="deck-form" id="deckForm" onsubmit="return addCard(event)">
+        <div class="field">
+          <label for="qInput">Vraag</label>
+          <input type="text" id="qInput" placeholder="bv. Wat is de hoofdstad van Frankrijk?" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="aInput">Antwoord (exact, woord voor woord)</label>
+          <textarea id="aInput" rows="2" placeholder="bv. De hoofdstad van Frankrijk is Parijs."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">+ Kaart toevoegen</button>
+          <button type="button" class="btn btn-ghost" id="sampleBtn">Voorbeeld invullen</button>
+          <span class="form-hint">Enter in het antwoordveld = kaart toevoegen</span>
+        </div>
+      </form>
+      <div class="deck-list" id="deckList"></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="startBtn" disabled>Start oefenen</button>
+        <button class="btn btn-ghost hidden" id="clearBtn">Alles verwijderen</button>
+      </div>
+    </div>
+
+    <div id="practiceArea" hidden>
+      <div class="card-meta">
+        <span id="stageLabel"></span>
+        <span class="vid" id="cardCounter"></span>
+      </div>
+      <div class="panel enter" id="practicePanel">
+        <div id="question"></div>
+
+        <div id="combineArea" hidden>
+          <div class="stage-label" id="combineStageLabel"></div>
+          <p class="stage-desc" id="combineDesc"></p>
+          <div class="placed" id="placed"></div>
+          <div class="bank" id="bank"></div>
+        </div>
+
+        <div id="typeArea" hidden>
+          <div class="stage-label" id="typeStageLabel"></div>
+          <p class="stage-desc" id="typeDesc"></p>
+          <input type="text" id="typeInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Typ hier het antwoord…">
+          <div class="chips" id="chips"></div>
+          <div class="hint-line" id="hintLine"></div>
+          <div class="type-actions">
+            <button class="btn btn-primary" id="checkBtn">Controleer (Enter)</button>
+            <button class="btn btn-ghost" id="hintBtn">Hint: volgende woord</button>
+          </div>
+          <div class="reveal" id="reveal">
+            <div class="rlabel">Juiste antwoord</div>
+            <div id="revealText"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card-nav">
+        <span></span>
+        <span class="nav-hint" id="navHint"></span>
+        <button class="btn btn-primary" id="nextBtn" hidden>Volgende &#8594;</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="resultPanel">
+      <div class="score-big" id="scoreBig"></div>
+      <p class="score-sub" id="scoreSub"></p>
+      <div class="review" id="review"></div>
+      <div class="result-actions">
+        <button class="btn btn-primary" id="retryBtn">Opnieuw oefenen</button>
+        <button class="btn btn-ghost" id="backBtn">Terug naar kaarten</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+<script>
+// PURE-START
+function norm(s) { return (s || '').trim().replace(/\s+/g, ' '); }
+function wordsOf(s) { const n = norm(s); return n === '' ? [] : n.split(' '); }
+function checkWords(expected, typed) {
+  const res = expected.map((w, i) => {
+    if (i >= typed.length) return 'missing';
+    return typed[i] === w ? 'ok' : 'bad';
+  });
+  const extra = Math.max(0, typed.length - expected.length);
+  const allOk = extra === 0 && typed.length === expected.length && res.every(s => s === 'ok');
+  return { res, extra, allOk };
+}
+function currentPos(expected, typed) {
+  let i = 0;
+  while (i < typed.length && i < expected.length && typed[i] === expected[i]) i++;
+  return i;
+}
+function hintText(word, level) {
+  if (!word) return '';
+  if (level <= 1) return word[0] + '\u2026 (' + word.length + ' letters)';
+  return word;
+}
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+// PURE-END
+
+const LS_KEY = 'typen.deck.v1';
+const $ = (id) => document.getElementById(id);
+
+let deck = loadDeck();
+let queue = [];
+let session = null;
+
+function loadDeck() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr.filter(c => c && c.q && c.a) : [];
+  } catch (e) { return []; }
+}
+function saveDeck() {
+  localStorage.setItem(LS_KEY, JSON.stringify(deck));
+}
+
+function renderDeck() {
+  const list = $('deckList');
+  list.innerHTML = '';
+  deck.forEach((c, i) => {
+    const item = document.createElement('div');
+    item.className = 'deck-item';
+    const nr = document.createElement('span');
+    nr.className = 'nr';
+    nr.textContent = (i + 1) + '.';
+    const grow = document.createElement('div');
+    grow.className = 'grow';
+    const dq = document.createElement('div');
+    dq.className = 'dq';
+    dq.textContent = c.q;
+    const da = document.createElement('div');
+    da.className = 'da';
+    da.textContent = c.a;
+    grow.appendChild(dq);
+    grow.appendChild(da);
+    const del = document.createElement('button');
+    del.className = 'del';
+    del.textContent = '\u00d7';
+    del.title = 'Verwijder deze kaart';
+    del.onclick = () => { deck.splice(i, 1); saveDeck(); renderDeck(); };
+    item.appendChild(nr);
+    item.appendChild(grow);
+    item.appendChild(del);
+    list.appendChild(item);
+  });
+  $('startBtn').disabled = deck.length === 0;
+  $('clearBtn').classList.toggle('hidden', deck.length === 0);
+  $('counter').textContent = deck.length ? deck.length + (deck.length === 1 ? ' kaart' : ' kaarten') : '';
+  $('progressBar').style.width = '0%';
+}
+
+function addCard(e) {
+  e.preventDefault();
+  const q = norm($('qInput').value);
+  const a = norm($('aInput').value);
+  if (!q || !a) {
+    $('deckPanel').classList.add('shake');
+    setTimeout(() => $('deckPanel').classList.remove('shake'), 340);
+    return false;
+  }
+  deck.push({ q, a });
+  saveDeck();
+  $('qInput').value = '';
+  $('aInput').value = '';
+  $('qInput').focus();
+  renderDeck();
+  return false;
+}
+
+$('aInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    $('deckForm').requestSubmit();
+  }
+});
+$('sampleBtn').onclick = () => {
+  $('qInput').value = 'Wat is de hoofdstad van Frankrijk?';
+  $('aInput').value = 'De hoofdstad van Frankrijk is Parijs.';
+  $('qInput').focus();
+};
+$('clearBtn').onclick = () => {
+  deck = [];
+  saveDeck();
+  renderDeck();
+};
+$('startBtn').onclick = () => startSession();
+$('retryBtn').onclick = () => startSession();
+$('backBtn').onclick = () => {
+  $('resultPanel').classList.add('hidden');
+  $('practiceArea').hidden = true;
+  $('deckPanel').classList.remove('hidden');
+  renderDeck();
+};
+$('checkBtn').onclick = () => checkAnswer();
+$('hintBtn').onclick = () => doHint();
+$('nextBtn').onclick = () => advance();
+$('typeInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); checkAnswer(); }
+});
+$('typeInput').addEventListener('input', () => renderChips());
+
+function startSession() {
+  if (deck.length === 0) return;
+  queue = deck.map((card, i) => ({ card, id: i, stage: 1, tries: 0, hintUsed: false, done: false, gaveUp: false }));
+  $('deckPanel').classList.add('hidden');
+  $('resultPanel').classList.add('hidden');
+  $('practiceArea').hidden = false;
+  nextItem();
+}
+
+function nextItem() {
+  const item = queue.find(it => !it.done && !it.gaveUp);
+  if (!item) { finishSession(); return; }
+  session = item;
+  session.hintLevels = {};
+  $('nextBtn').hidden = true;
+  $('reveal').classList.remove('show');
+  $('question').textContent = session.card.q;
+  $('cardCounter').textContent = 'kaart ' + (session.id + 1) + ' / ' + deck.length;
+  const done = queue.filter(it => it.done).length;
+  $('progressBar').style.width = Math.round((done / queue.length) * 100) + '%';
+  $('stageLabel').textContent = 'Stap ' + session.stage + ' van 3';
+  if (session.stage === 1) renderCombine(); else renderType();
+}
+
+function renderCombine() {
+  $('combineArea').hidden = false;
+  $('typeArea').hidden = true;
+  $('combineStageLabel').textContent = 'Stap 1 \u2014 Combineren';
+  $('combineDesc').textContent = 'De woorden van het antwoord staan door elkaar. Klik ze in de juiste volgorde aan om de zin op te bouwen.';
+  $('navHint').textContent = 'klik een woord om te plaatsen \u00b7 klik opnieuw om terug te nemen';
+  const words = wordsOf(session.card.a);
+  session.bank = shuffle(words);
+  session.placed = [];
+  renderTiles();
+}
+
+function renderTiles() {
+  const placed = $('placed');
+  const bank = $('bank');
+  placed.innerHTML = '';
+  bank.innerHTML = '';
+  session.placed.forEach((w, i) => {
+    const t = document.createElement('button');
+    t.className = 'tile placed-tile';
+    t.textContent = w;
+    t.onclick = () => {
+      session.bank.push(session.placed.splice(i, 1)[0]);
+      renderTiles();
+    };
+    placed.appendChild(t);
+  });
+  session.bank.forEach((w, i) => {
+    const t = document.createElement('button');
+    t.className = 'tile';
+    t.textContent = w;
+    t.onclick = () => {
+      session.placed.push(session.bank.splice(i, 1)[0]);
+      renderTiles();
+      checkPlaced();
+    };
+    bank.appendChild(t);
+  });
+}
+
+function checkPlaced() {
+  const expected = wordsOf(session.card.a);
+  if (session.placed.length !== expected.length) return;
+  const ok = expected.every((w, i) => session.placed[i] === w);
+  if (ok) {
+    session.stage = 2;
+    nextItem();
+  } else {
+    $('practicePanel').classList.add('shake');
+    setTimeout(() => {
+      $('practicePanel').classList.remove('shake');
+      session.bank = session.bank.concat(session.placed);
+      session.placed = [];
+      renderTiles();
+    }, 340);
+  }
+}
+
+function renderType() {
+  $('combineArea').hidden = true;
+  $('typeArea').hidden = false;
+  $('typeInput').value = '';
+  $('hintLine').textContent = '';
+  $('reveal').classList.remove('show');
+  $('chips').innerHTML = '';
+  if (session.stage === 2) {
+    $('typeStageLabel').textContent = 'Stap 2 \u2014 Typen met hint';
+    $('typeDesc').textContent = 'Typ het antwoord woord voor woord. Weet je een woord niet? Gebruik de hint: eerst de beginletter en lengte, dan het hele woord.';
+    $('hintBtn').classList.remove('hidden');
+    $('navHint').textContent = 'Enter = controleren \u00b7 hint = progressief onthullen';
+  } else {
+    $('typeStageLabel').textContent = 'Stap 3 \u2014 Typen uit het hoofd';
+    $('typeDesc').textContent = 'Nu zonder hint: typ het volledige antwoord exact over.';
+    $('hintBtn').classList.add('hidden');
+    $('navHint').textContent = 'Enter = controleren \u00b7 fout? dan zie je het juiste antwoord en oefen je straks opnieuw';
+  }
+  setTimeout(() => $('typeInput').focus(), 50);
+}
+
+function typedWords() {
+  const v = $('typeInput').value;
+  const t = v.trim();
+  if (t === '') return { words: [], partial: '' };
+  const words = t.split(/\s+/);
+  const partial = /\s$/.test(v) ? '' : words.pop();
+  return { words, partial: partial || '' };
+}
+
+function renderChips() {
+  const expected = wordsOf(session.card.a);
+  const { words, partial } = typedWords();
+  const chk = checkWords(expected, words);
+  const box = $('chips');
+  box.innerHTML = '';
+  words.forEach((w, i) => {
+    const s = document.createElement('span');
+    s.className = 'chip ' + (chk.res[i] === 'ok' ? 'ok' : 'bad');
+    s.textContent = w;
+    box.appendChild(s);
+  });
+  for (let i = 0; i < chk.extra; i++) {
+    const s = document.createElement('span');
+    s.className = 'chip bad';
+    s.textContent = words[expected.length + i];
+    box.appendChild(s);
+  }
+  if (partial) {
+    const s = document.createElement('span');
+    s.className = 'chip cur';
+    s.textContent = partial;
+    box.appendChild(s);
+  }
+}
+
+function doHint() {
+  if (!session || session.stage !== 2) return;
+  const expected = wordsOf(session.card.a);
+  const { words } = typedWords();
+  const pos = Math.min(currentPos(expected, words), expected.length - 1);
+  const level = (session.hintLevels[pos] || 0) + 1;
+  session.hintLevels[pos] = level;
+  session.hintUsed = true;
+  const word = expected[pos];
+  if (level >= 2) {
+    const base = words.slice(0, pos);
+    $('typeInput').value = base.concat([word]).join(' ') + ' ';
+  }
+  $('hintLine').textContent = 'Hint woord ' + (pos + 1) + ': ' + hintText(word, level);
+  renderChips();
+  $('typeInput').focus();
+}
+
+function checkAnswer() {
+  if (!session || session.stage === 1) return;
+  if ($('nextBtn').hidden === false) return;
+  const expected = wordsOf(session.card.a);
+  const words = wordsOf($('typeInput').value);
+  const chk = checkWords(expected, words);
+  renderChips();
+  if (chk.allOk) {
+    $('hintLine').textContent = 'Juist!';
+    $('hintLine').style.color = 'var(--ok)';
+    setTimeout(() => { $('hintLine').style.color = ''; }, 1500);
+    session.stage++;
+    if (session.stage === 3) session.hintUsed = false;
+    if (session.stage > 3) {
+      session.done = true;
+      $('nextBtn').hidden = false;
+      $('nextBtn').textContent = queue.some(it => !it.done && !it.gaveUp) ? 'Volgende \u2192' : 'Resultaat \u2192';
+    } else {
+      $('nextBtn').hidden = false;
+      $('nextBtn').textContent = 'Naar stap ' + session.stage + ' \u2192';
+    }
+  } else {
+    $('practicePanel').classList.add('shake');
+    setTimeout(() => $('practicePanel').classList.remove('shake'), 340);
+    if (session.stage === 3) {
+      session.tries++;
+      $('revealText').textContent = session.card.a;
+      $('reveal').classList.add('show');
+      if (session.tries >= 3) {
+        session.gaveUp = true;
+        $('nextBtn').hidden = false;
+        $('nextBtn').textContent = 'Volgende \u2192';
+      } else {
+        session.stage = 2;
+        session.hintUsed = false;
+        $('nextBtn').hidden = false;
+        $('nextBtn').textContent = 'Opnieuw oefenen \u2192';
+      }
+    }
+  }
+}
+
+function advance() {
+  if (!session) return;
+  if (!session.done && !session.gaveUp && session.stage <= 3) {
+    nextItem();
+    return;
+  }
+  const done = queue.filter(it => it.done).length;
+  $('progressBar').style.width = Math.round((done / queue.length) * 100) + '%';
+  nextItem();
+}
+
+function finishSession() {
+  $('practiceArea').hidden = true;
+  const panel = $('resultPanel');
+  panel.classList.remove('hidden');
+  panel.classList.add('enter');
+  const perfect = queue.filter(it => it.done && it.tries === 0 && !it.hintUsed).length;
+  const withHint = queue.filter(it => it.done && (it.hintUsed || it.tries > 0)).length;
+  const gaveUp = queue.filter(it => it.gaveUp).length;
+  $('scoreBig').textContent = perfect + ' / ' + queue.length;
+  $('scoreSub').textContent = perfect + ' vanop eerste poging perfect \u00b7 ' + withHint + ' met hint of hertoets \u00b7 ' + gaveUp + ' opgegeven';
+  $('progressBar').style.width = '100%';
+  const review = $('review');
+  review.innerHTML = '';
+  queue.forEach((it) => {
+    const div = document.createElement('div');
+    div.className = 'review-item';
+    const rq = document.createElement('div');
+    rq.className = 'rq';
+    rq.textContent = it.card.q;
+    const badge = document.createElement('span');
+    if (it.done && it.tries === 0 && !it.hintUsed) { badge.className = 'badge ok'; badge.textContent = 'perfect'; }
+    else if (it.done) { badge.className = 'badge hint'; badge.textContent = 'met hint'; }
+    else { badge.className = 'badge hint'; badge.textContent = 'opgegeven'; }
+    rq.appendChild(badge);
+    const ra = document.createElement('div');
+    ra.className = 'ra';
+    ra.textContent = it.card.a;
+    div.appendChild(rq);
+    div.appendChild(ra);
+    review.appendChild(div);
+  });
+}
+
+renderDeck();
+</script>
+</body>
+</html>
