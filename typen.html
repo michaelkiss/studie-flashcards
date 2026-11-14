@@ -314,7 +314,9 @@
   .part-block .part-wrap:focus-within { outline: 2px solid var(--terracotta); outline-offset: -1px; }
   .part-block.done .part-wrap { border-color: var(--ok); background: #f2f5ef; }
   .part-block.schrijven .part-input { background: transparent; }
-  .part-block.schrijven .part-input::placeholder { color: transparent; }
+  .part-block.schrijven .part-input::placeholder { color: transparent; opacity: 0; }
+  .part-block.schrijven .part-input::-webkit-input-placeholder { color: transparent; opacity: 0; }
+  .part-block.schrijven .part-input::-moz-placeholder { color: transparent; opacity: 0; }
   .ghost {
     position: absolute;
     inset: 0;
@@ -1022,7 +1024,7 @@ function buildPartsUI() {
     const ta = document.createElement('textarea');
     ta.className = 'part-input';
     ta.rows = 2;
-    ta.placeholder = 'Typ dit onderdeel\u2026';
+    ta.placeholder = session.card.mode === 'schrijven' ? '' : 'Typ dit onderdeel\u2026';
     ta.autocomplete = 'off';
     ta.autocapitalize = 'off';
     ta.spellcheck = false;
