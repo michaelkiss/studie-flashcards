@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<title>Typen &mdash; woord voor woord</title>
+<title>Typen &mdash; per onderdeel</title>
 <style>
   :root {
     --parchment: #f5f4ed;
@@ -181,7 +181,7 @@
     font-weight: 700;
     line-height: 1.35;
     letter-spacing: -0.01em;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
   }
 
   form.deck-form { display: flex; flex-direction: column; gap: 0.9rem; margin-bottom: 1.25rem; }
@@ -193,7 +193,7 @@
     color: var(--olive);
     margin-bottom: 0.35rem;
   }
-  .field input, .field textarea {
+  .field input {
     width: 100%;
     font-family: Georgia, serif;
     font-size: 1rem;
@@ -203,9 +203,12 @@
     border-radius: var(--radius);
     padding: 0.6rem 0.8rem;
     box-shadow: 0 0 0 1px var(--cream-border);
-    resize: vertical;
   }
-  .field input:focus, .field textarea:focus { outline: 2px solid var(--terracotta); outline-offset: -1px; }
+  .field input:focus { outline: 2px solid var(--terracotta); outline-offset: -1px; }
+  #partsInputs { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem; }
+  .part-row { display: flex; gap: 0.5rem; align-items: flex-start; }
+  .part-row .part-input { flex: 1; }
+  .part-del { margin-top: 0.4rem; flex-shrink: 0; }
   .form-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
   .form-hint { font-size: 0.8125rem; color: var(--stone); letter-spacing: 0.03em; }
   .setting-row {
@@ -272,32 +275,42 @@
   .stat-row .val { white-space: nowrap; font-variant-numeric: tabular-nums; }
   .stats-empty { color: var(--olive); font-size: 0.9375rem; }
 
-  #typeInput {
+  .part-block { margin-bottom: 1.1rem; }
+  .part-label {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin-bottom: 0.3rem;
+  }
+  .part-label.done { color: var(--ok); }
+  .part-input {
     width: 100%;
-    min-height: 6rem;
+    min-height: 3.75rem;
     font-family: Georgia, serif;
-    font-size: 1.25rem;
+    font-size: 1.15rem;
     line-height: 1.5;
     color: var(--ink);
     background: var(--parchment);
     border: 1px solid var(--cream-border);
     border-radius: var(--radius);
-    padding: 0.8rem 1rem;
+    padding: 0.7rem 0.9rem;
     box-shadow: 0 0 0 1px var(--cream-border);
-    margin-bottom: 0.6rem;
     resize: none;
     overflow: hidden;
   }
-  #typeInput:focus { outline: 2px solid var(--terracotta); outline-offset: -1px; }
+  .part-input:focus { outline: 2px solid var(--terracotta); outline-offset: -1px; }
+  .part-block.done .part-input { border-color: var(--ok); background: #f2f5ef; }
   .auto-bar-track {
     height: 3px;
     background: var(--cream-border);
     border-radius: 2px;
     overflow: hidden;
-    margin-bottom: 0.9rem;
+    margin-bottom: 1rem;
   }
   #autoBar { height: 100%; width: 100%; background: var(--olive); }
-  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.9rem; min-height: 1.6rem; }
+  .chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.45rem; min-height: 1.6rem; }
   .chip {
     font-size: 0.9375rem;
     padding: 0.15rem 0.6rem;
@@ -320,7 +333,7 @@
     font-size: 0.9375rem;
     color: var(--terracotta-dark);
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin: 0.5rem 0 1rem;
   }
   .type-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
 
@@ -443,20 +456,23 @@
 
     <div class="panel" id="deckPanel">
       <h2>Kaarten aanmaken</h2>
-      <p class="intro">Plak een vraag en het bijhorende antwoord &mdash; druk op <strong>Enter</strong> om de kaart toe te voegen. Daarna zie je bij het oefenen <strong>enkel de vraag</strong> en typ je het antwoord woord voor woord. Komt het niet snel genoeg? Dan vult de app na een paar seconden <strong>automatisch het volgende woord</strong> in.</p>
+      <p class="intro">Plak een vraag en het antwoord &mdash; druk op <strong>Enter</strong> om de kaart toe te voegen. Bestaat het antwoord uit <strong>meerdere onderdelen</strong>? Voeg dan extra velden toe: elk onderdeel wordt apart geoefend en apart gecheckt.</p>
       <form class="deck-form" id="deckForm" onsubmit="return addCard(event)">
         <div class="field">
           <label for="qInput">Vraag</label>
           <input type="text" id="qInput" placeholder="bv. Wat is de hoofdstad van Frankrijk?" autocomplete="off">
         </div>
         <div class="field">
-          <label for="aInput">Antwoord (exact, woord voor woord)</label>
-          <textarea id="aInput" rows="2" placeholder="bv. De hoofdstad van Frankrijk is Parijs."></textarea>
+          <label>Antwoord &mdash; elk onderdeel een eigen veld</label>
+          <div id="partsInputs"></div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-ghost" id="addPartBtn">+ Onderdeel toevoegen</button>
+          </div>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">+ Kaart toevoegen</button>
           <button type="button" class="btn btn-ghost" id="sampleBtn">Voorbeeld invullen</button>
-          <span class="form-hint">Enter in het antwoordveld = kaart toevoegen</span>
+          <span class="form-hint">Enter in een antwoordveld = kaart toevoegen</span>
         </div>
       </form>
       <div class="setting-row">
@@ -490,9 +506,8 @@
       </div>
       <div class="panel enter" id="practicePanel">
         <div id="question"></div>
-        <textarea id="typeInput" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Typ hier het antwoord…"></textarea>
         <div class="auto-bar-track"><div id="autoBar"></div></div>
-        <div class="chips" id="chips"></div>
+        <div id="partsArea"></div>
         <div class="status-line" id="statusLine"></div>
         <div class="type-actions">
           <button class="btn btn-ghost" id="nextWordBtn">Volgende woord &#8635;</button>
@@ -502,7 +517,7 @@
       </div>
       <div class="card-nav">
         <button class="btn btn-ghost" id="pauseBtn">&#9208;&#65039; Pauzeer</button>
-        <span class="nav-hint">elk voltooid woord wordt meteen gecheckt &middot; Enter = volgende kaart als alles klopt &middot; pauze verbergt de tekst</span>
+        <span class="nav-hint">elk onderdeel apart gecheckt &middot; Enter = volgende onderdeel &middot; pauze verbergt de tekst</span>
         <span></span>
       </div>
     </div>
@@ -575,14 +590,26 @@ function loadDeck() {
   try {
     const raw = localStorage.getItem(LS_DECK);
     const arr = raw ? JSON.parse(raw) : [];
-    const list = Array.isArray(arr) ? arr.filter(c => c && c.q && c.a) : [];
+    const list = Array.isArray(arr) ? arr.filter(c => c && c.q) : [];
     let changed = false;
-    list.forEach(c => { if (!c.id) { c.id = uid(); changed = true; } });
-    if (changed) saveDeck();
-    return list;
+    list.forEach(c => {
+      if (!c.id) { c.id = uid(); changed = true; }
+      if (!Array.isArray(c.parts)) {
+        c.parts = typeof c.a === 'string' && norm(c.a) !== '' ? [c.a] : [];
+        delete c.a;
+        changed = true;
+      }
+      const parts = c.parts.filter(p => typeof p === 'string' && norm(p) !== '').map(p => norm(p));
+      if (parts.length !== c.parts.length) changed = true;
+      c.parts = parts;
+    });
+    const valid = list.filter(c => c.parts.length > 0);
+    if (changed || valid.length !== list.length) saveDeckList(valid);
+    return valid;
   } catch (e) { return []; }
 }
-function saveDeck() { localStorage.setItem(LS_DECK, JSON.stringify(deck)); }
+function saveDeckList(list) { localStorage.setItem(LS_DECK, JSON.stringify(list)); }
+function saveDeck() { saveDeckList(deck); }
 function loadStats() {
   try {
     const o = JSON.parse(localStorage.getItem(LS_STATS) || '{}');
@@ -660,6 +687,58 @@ function confetti() {
   if (globalThis.requestAnimationFrame) requestAnimationFrame(frame);
 }
 
+/* ---- kaart-formulier: dynamische antwoord-onderdelen ---- */
+function addPartInput(value) {
+  const wrap = $('partsInputs');
+  const row = document.createElement('div');
+  row.className = 'part-row';
+  const ta = document.createElement('textarea');
+  ta.className = 'part-input';
+  ta.rows = 2;
+  ta.autocomplete = 'off';
+  ta.autocapitalize = 'off';
+  ta.spellcheck = false;
+  if (value !== undefined && value !== '') ta.value = value;
+  ta.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      $('deckForm').requestSubmit();
+    }
+  });
+  ta.addEventListener('input', () => autoGrow(ta));
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'del part-del';
+  del.textContent = '\u00d7';
+  del.title = 'Verwijder dit onderdeel';
+  del.onclick = () => {
+    if ($('partsInputs').children.length > 1) row.remove();
+    else ta.value = '';
+    renumberPartInputs();
+  };
+  row.appendChild(ta);
+  row.appendChild(del);
+  wrap.appendChild(row);
+  renumberPartInputs();
+  return ta;
+}
+function renumberPartInputs() {
+  const rows = $('partsInputs').children;
+  for (let i = 0; i < rows.length; i++) {
+    const ta = rows[i].querySelector('.part-input');
+    if (ta && !ta.value) ta.placeholder = 'Onderdeel ' + (i + 1) + '\u2026';
+  }
+}
+function collectParts() {
+  const rows = $('partsInputs').children;
+  const out = [];
+  for (let i = 0; i < rows.length; i++) {
+    const v = norm(rows[i].querySelector('.part-input').value);
+    if (v !== '') out.push(v);
+  }
+  return out;
+}
+
 /* ---- deck ---- */
 function renderDeck() {
   const list = $('deckList');
@@ -677,7 +756,7 @@ function renderDeck() {
     dq.textContent = c.q;
     const da = document.createElement('div');
     da.className = 'da';
-    da.textContent = c.a;
+    da.textContent = c.parts.join('  \u00b7  ') + (c.parts.length > 1 ? '  (' + c.parts.length + ' onderdelen)' : '');
     grow.appendChild(dq);
     grow.appendChild(da);
     const st = document.createElement('button');
@@ -705,30 +784,31 @@ function renderDeck() {
 function addCard(e) {
   e.preventDefault();
   const q = norm($('qInput').value);
-  const a = norm($('aInput').value);
-  if (!q || !a) {
+  const parts = collectParts();
+  if (!q || !parts.length) {
     $('deckPanel').classList.add('shake');
     setTimeout(() => $('deckPanel').classList.remove('shake'), 340);
     return false;
   }
-  deck.push({ q, a, id: uid() });
+  deck.push({ q, parts, id: uid() });
   saveDeck();
   $('qInput').value = '';
-  $('aInput').value = '';
+  $('partsInputs').innerHTML = '';
+  addPartInput('');
   $('qInput').focus();
   renderDeck();
   return false;
 }
 
-$('aInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    $('deckForm').requestSubmit();
-  }
-});
+$('addPartBtn').onclick = () => {
+  const ta = addPartInput('');
+  ta.focus();
+};
 $('sampleBtn').onclick = () => {
   $('qInput').value = 'Wat is de hoofdstad van Frankrijk?';
-  $('aInput').value = 'De hoofdstad van Frankrijk is Parijs.';
+  $('partsInputs').innerHTML = '';
+  addPartInput('De hoofdstad van Frankrijk');
+  addPartInput('is Parijs.');
   $('qInput').focus();
 };
 $('clearBtn').onclick = () => { deck = []; stats = {}; saveStats(); saveDeck(); renderDeck(); };
@@ -754,42 +834,36 @@ $('nextWordBtn').onclick = () => startReveal(true);
 $('revealBtn').onclick = () => {
   if (!session || session.done || paused) return;
   cancelReveal();
-  const expected = wordsOf(session.card.a);
-  for (let i = 0; i < expected.length; i++) session.autoIdx.add(i);
-  $('typeInput').value = expected.join(' ') + ' ';
+  session.card.parts.forEach((p, pi) => {
+    wordsOf(p).forEach((w, wi) => session.autoIdx.add(pi + ':' + wi));
+    session.partEls[pi].ta.value = p + ' ';
+    autoGrow(session.partEls[pi].ta);
+  });
   $('statusLine').textContent = 'Antwoord ingevuld (telt als auto-woorden).';
   sfxAuto();
   renderChips();
   resetIdle();
 };
 $('nextBtn').onclick = () => advance();
-$('typeInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    if (!session) return;
-    const chk = checkWords(wordsOf(session.card.a), wordsOf($('typeInput').value));
-    if (chk.allOk && session.done) advance();
-    else {
-      $('practicePanel').classList.add('shake');
-      setTimeout(() => $('practicePanel').classList.remove('shake'), 340);
-      sfxWrong();
-    }
-  }
-});
-$('typeInput').addEventListener('input', () => {
-  if (revealing) cancelReveal();
-  autoGrow();
-  renderChips();
-  resetIdle();
-});
-function autoGrow() {
-  const el = $('typeInput');
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight || 96, 320) + 'px';
-}
 $('pauseBtn').onclick = () => pausePractice();
 $('resumeBtn').onclick = () => resumePractice();
 document.addEventListener('visibilitychange', () => { if (document.hidden) pausePractice(); });
+$('muteBtn').onclick = () => {
+  muted = !muted;
+  localStorage.setItem(LS_MUTED, muted ? '1' : '0');
+  $('muteBtn').innerHTML = muted ? '&#128263;' : '&#128266;';
+};
+$('autoDelay').value = localStorage.getItem(LS_DELAY) || '4';
+$('autoDelay').addEventListener('change', () => {
+  localStorage.setItem(LS_DELAY, $('autoDelay').value);
+  resetIdle();
+});
+$('muteBtn').innerHTML = muted ? '&#128263;' : '&#128266;';
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight || 96, 320) + 'px';
+}
 
 function pausePractice() {
   if (!session || session.done || paused) return;
@@ -807,19 +881,8 @@ function resumePractice() {
   $('pauseBtn').innerHTML = '&#9208;&#65039; Pauzeer';
   beep(520, 0.1, 'sine', 0.08);
   resetIdle();
-  $('typeInput').focus();
+  if (session && session.partEls.length) session.partEls[currentPartIdx()] && session.partEls[currentPartIdx()].ta.focus();
 }
-$('muteBtn').onclick = () => {
-  muted = !muted;
-  localStorage.setItem(LS_MUTED, muted ? '1' : '0');
-  $('muteBtn').innerHTML = muted ? '&#128263;' : '&#128266;';
-};
-$('autoDelay').value = localStorage.getItem(LS_DELAY) || '4';
-$('autoDelay').addEventListener('change', () => {
-  localStorage.setItem(LS_DELAY, $('autoDelay').value);
-  resetIdle();
-});
-$('muteBtn').innerHTML = muted ? '&#128263;' : '&#128266;';
 
 function autoDelayMs() {
   const v = parseInt($('autoDelay').value, 10);
@@ -849,45 +912,6 @@ function cancelReveal() {
   revealing = false;
 }
 
-function startReveal(manual) {
-  if (!session || session.done || paused) return;
-  const expected = wordsOf(session.card.a);
-  const v = $('typeInput').value;
-  const t = v.trim();
-  const completed = t === '' ? [] : t.split(/\s+/);
-  const pos = Math.min(currentPos(expected, completed), expected.length - 1);
-  if (pos >= expected.length) return;
-  cancelReveal();
-  clearTimeout(idleTimer);
-  const base = expected.slice(0, pos).join(' ');
-  const rest = completed.slice(pos + 1);
-  const word = expected[pos];
-  session.autoIdx.add(pos);
-  revealing = true;
-  let k = 0;
-  const step = () => {
-    if (paused) { revealing = false; return; }
-    k++;
-    const partial = word.slice(0, k);
-    $('typeInput').value = (base ? base + ' ' : '') + partial + (rest.length ? ' ' + rest.join(' ') : '') + (k >= word.length ? ' ' : '');
-    $('statusLine').textContent = (manual ? 'Woord ' : 'Auto-woord ') + (pos + 1) + ' van ' + expected.length + ': ' + partial + (k < word.length ? '\u2026' : '');
-    autoGrow();
-    if (k >= word.length) {
-      revealing = false;
-      score += 2;
-      updateScore(true);
-      sfxAuto();
-      renderChips();
-      resetIdle();
-    } else {
-      beep(660 + k * 50, 0.035, 'sine', 0.05);
-      renderChips();
-      revealTimer = setTimeout(step, 320);
-    }
-  };
-  step();
-}
-
 /* ---- sessie ---- */
 function startSession(cards) {
   if (!cards || !cards.length) return;
@@ -915,70 +939,137 @@ function nextItem() {
   const item = queue.find(it => !it.done);
   if (!item) { finishSession(); return; }
   session = item;
-  session.prev = [];
   session.startedAt = Date.now();
+  session.prev = [];
+  session.partEls = [];
   $('nextBtn').classList.add('hidden');
   $('statusLine').textContent = '';
-  $('typeInput').value = '';
-  $('chips').innerHTML = '';
   $('question').textContent = session.card.q;
   $('cardCounter').textContent = 'kaart ' + (session.id + 1) + ' / ' + queue.length;
   const done = queue.filter(it => it.done).length;
   $('progressBar').style.width = Math.round((done / queue.length) * 100) + '%';
+  buildPartsUI();
   renderChips();
   resetIdle();
-  setTimeout(() => $('typeInput').focus(), 50);
+  setTimeout(() => session.partEls[0] && session.partEls[0].ta.focus(), 50);
 }
 
-function typedWords() {
-  const v = $('typeInput').value;
+function buildPartsUI() {
+  const area = $('partsArea');
+  area.innerHTML = '';
+  const parts = session.card.parts;
+  parts.forEach((p, pi) => {
+    const block = document.createElement('div');
+    block.className = 'part-block';
+    const lbl = document.createElement('div');
+    lbl.className = 'part-label';
+    lbl.textContent = 'Onderdeel ' + (pi + 1) + ' van ' + parts.length;
+    const ta = document.createElement('textarea');
+    ta.className = 'part-input';
+    ta.rows = 2;
+    ta.placeholder = 'Typ dit onderdeel\u2026';
+    ta.autocomplete = 'off';
+    ta.autocapitalize = 'off';
+    ta.spellcheck = false;
+    ta.addEventListener('keydown', (e) => onPartKeydown(e, pi));
+    ta.addEventListener('input', () => {
+      if (revealing) cancelReveal();
+      autoGrow(ta);
+      renderChips();
+      resetIdle();
+    });
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    block.appendChild(lbl);
+    block.appendChild(ta);
+    block.appendChild(chips);
+    area.appendChild(block);
+    session.partEls.push({ ta, chips, lbl, block });
+    session.prev.push([]);
+  });
+}
+
+function partTyped(pi) {
+  const v = session.partEls[pi].ta.value;
   const t = v.trim();
   if (t === '') return { words: [], partial: '' };
   const words = t.split(/\s+/);
   const partial = /\s$/.test(v) ? '' : words.pop();
   return { words, partial: partial || '' };
 }
+function partAllOk(pi) {
+  return checkWords(wordsOf(session.card.parts[pi]), wordsOf(session.partEls[pi].ta.value)).allOk;
+}
+function allPartsOk() {
+  return session.card.parts.every((p, pi) => partAllOk(pi));
+}
+function currentPartIdx() {
+  const parts = session.card.parts;
+  for (let pi = 0; pi < parts.length; pi++) if (!partAllOk(pi)) return pi;
+  return parts.length;
+}
+
+function onPartKeydown(e, pi) {
+  if (e.key !== 'Enter' || e.shiftKey) return;
+  e.preventDefault();
+  if (!session) return;
+  if (partAllOk(pi)) {
+    if (allPartsOk() && session.done) { advance(); return; }
+    const next = currentPartIdx();
+    if (next < session.card.parts.length) session.partEls[next].ta.focus();
+  } else {
+    $('practicePanel').classList.add('shake');
+    setTimeout(() => $('practicePanel').classList.remove('shake'), 340);
+    sfxWrong();
+  }
+}
 
 function renderChips() {
   if (!session) return;
-  const expected = wordsOf(session.card.a);
-  const { words, partial } = typedWords();
-  const chk = checkWords(expected, words);
-  const box = $('chips');
-  box.innerHTML = '';
+  const parts = session.card.parts;
   let newOk = 0;
   let newBad = 0;
-  words.forEach((w, i) => {
-    const st = chk.res[i] === 'ok' ? 'ok' : 'bad';
-    const isAuto = session.autoIdx.has(i);
-    const prev = session.prev[i] || 'missing';
-    if (st === 'ok' && prev !== 'ok' && !isAuto) { newOk++; }
-    if (st === 'bad' && prev !== 'bad') { newBad++; }
-    const s = document.createElement('span');
-    s.className = 'chip ' + (st === 'ok' ? (isAuto ? 'auto' : 'ok pop') : 'bad');
-    s.textContent = w;
-    box.appendChild(s);
+  parts.forEach((p, pi) => {
+    const expected = wordsOf(p);
+    const { words, partial } = partTyped(pi);
+    const chk = checkWords(expected, words);
+    const box = session.partEls[pi].chips;
+    box.innerHTML = '';
+    words.forEach((w, i) => {
+      const st = chk.res[i] === 'ok' ? 'ok' : 'bad';
+      const isAuto = session.autoIdx.has(pi + ':' + i);
+      const prev = session.prev[pi][i] || 'missing';
+      if (st === 'ok' && prev !== 'ok' && !isAuto) newOk++;
+      if (st === 'bad' && prev !== 'bad') newBad++;
+      const s = document.createElement('span');
+      s.className = 'chip ' + (st === 'ok' ? (isAuto ? 'auto' : 'ok pop') : 'bad');
+      s.textContent = w;
+      box.appendChild(s);
+    });
+    for (let i = 0; i < chk.extra; i++) {
+      const s = document.createElement('span');
+      s.className = 'chip bad';
+      s.textContent = words[expected.length + i];
+      box.appendChild(s);
+    }
+    if (partial) {
+      const s = document.createElement('span');
+      s.className = 'chip cur';
+      s.textContent = partial;
+      box.appendChild(s);
+    }
+    session.prev[pi] = chk.res.slice();
+    const done = chk.allOk && wordsOf(session.partEls[pi].ta.value).length === expected.length && checkWords(expected, wordsOf(session.partEls[pi].ta.value)).allOk;
+    session.partEls[pi].block.classList.toggle('done', done);
+    session.partEls[pi].lbl.classList.toggle('done', done);
   });
-  for (let i = 0; i < chk.extra; i++) {
-    const s = document.createElement('span');
-    s.className = 'chip bad';
-    s.textContent = words[expected.length + i];
-    box.appendChild(s);
-  }
-  if (partial) {
-    const s = document.createElement('span');
-    s.className = 'chip cur';
-    s.textContent = partial;
-    box.appendChild(s);
-  }
-  session.prev = chk.res.slice();
   if (newOk > 0) {
     score += newOk * 10;
     updateScore(true);
     sfxCorrect();
   }
   if (newBad > 0) sfxWrong();
-  if (chk.allOk && !session.done) completeCard();
+  if (allPartsOk() && !session.done) completeCard();
 }
 
 function updateScore(pop) {
@@ -988,6 +1079,48 @@ function updateScore(pop) {
     void $('score').offsetWidth;
     $('score').classList.add('pop');
   }
+}
+
+function startReveal(manual) {
+  if (!session || session.done || paused) return;
+  const pi = currentPartIdx();
+  if (pi >= session.card.parts.length) return;
+  const expected = wordsOf(session.card.parts[pi]);
+  const el = session.partEls[pi].ta;
+  const v = el.value;
+  const t = v.trim();
+  const completed = t === '' ? [] : t.split(/\s+/);
+  const pos = Math.min(currentPos(expected, completed), expected.length - 1);
+  if (pos >= expected.length) return;
+  cancelReveal();
+  clearTimeout(idleTimer);
+  const base = expected.slice(0, pos).join(' ');
+  const rest = completed.slice(pos + 1);
+  const word = expected[pos];
+  session.autoIdx.add(pi + ':' + pos);
+  revealing = true;
+  let k = 0;
+  const step = () => {
+    if (paused) { revealing = false; return; }
+    k++;
+    const partial = word.slice(0, k);
+    el.value = (base ? base + ' ' : '') + partial + (rest.length ? ' ' + rest.join(' ') : '') + (k >= word.length ? ' ' : '');
+    $('statusLine').textContent = (manual ? 'Woord ' : 'Auto-woord ') + (pos + 1) + ' van ' + expected.length + ' (onderdeel ' + (pi + 1) + '): ' + partial + (k < word.length ? '\u2026' : '');
+    autoGrow(el);
+    if (k >= word.length) {
+      revealing = false;
+      score += 2;
+      updateScore(true);
+      sfxAuto();
+      renderChips();
+      resetIdle();
+    } else {
+      beep(660 + k * 50, 0.035, 'sine', 0.05);
+      renderChips();
+      revealTimer = setTimeout(step, 320);
+    }
+  };
+  step();
 }
 
 function recordAttempt(it) {
@@ -1062,7 +1195,7 @@ function finishSession() {
     rq.appendChild(badge);
     const ra = document.createElement('div');
     ra.className = 'ra';
-    ra.textContent = it.card.a;
+    ra.textContent = it.card.parts.join(' \u00b7 ');
     div.appendChild(rq);
     div.appendChild(ra);
     const st = stats[it.card.id] || [];
@@ -1158,6 +1291,7 @@ function showStats(id) {
   $('statsPanel').classList.remove('hidden');
 }
 
+addPartInput('');
 renderDeck();
 </script>
 </body>
