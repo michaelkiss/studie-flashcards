@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <title>Flashcards — Q&amp;A hoofdstukken</title>
 <style>
   :root {
@@ -53,6 +55,8 @@
     font-weight: 700;
     letter-spacing: -0.01em;
   }
+  .brand { display: flex; align-items: center; gap: 0.6rem; }
+  .logo { height: 2.25rem; width: auto; display: block; }
   .header-tools {
     display: flex;
     align-items: center;
@@ -215,7 +219,7 @@
 <body>
 <div class="container">
   <header>
-    <h1>Flashcards</h1>
+    <div class="brand"><img class="logo" src="logo.png" alt="paprikasix"><h1>Flashcards</h1></div>
     <div class="header-tools">
       <span class="counter" id="counter">0 / 0</span>
       <select id="deckSelect" hidden></select>
