@@ -254,6 +254,19 @@
     line-height: 1;
   }
   .del:hover { color: var(--terracotta-dark); background: var(--cream-border); }
+  .stat-btn:hover { color: var(--terracotta); }
+  .stats-summary { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; margin-bottom: 1rem; font-size: 0.9375rem; color: var(--olive); }
+  .stats-summary b { color: var(--ink); }
+  .trend { font-weight: 700; margin-bottom: 1.25rem; font-size: 1rem; }
+  .trend.up { color: var(--ok); }
+  .trend.down { color: var(--terracotta-dark); }
+  .stat-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.45rem; font-size: 0.875rem; color: var(--olive); }
+  .stat-row .lbl { min-width: 10rem; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stat-bar-track { flex: 1; height: 8px; background: var(--cream-border); border-radius: 4px; overflow: hidden; }
+  .stat-bar { height: 100%; background: var(--terracotta); border-radius: 4px; }
+  .stat-row.perfect .stat-bar { background: var(--ok); }
+  .stat-row .val { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .stats-empty { color: var(--olive); font-size: 0.9375rem; }
 
   #typeInput {
     width: 100%;
@@ -457,6 +470,14 @@
       </div>
     </div>
 
+    <div class="panel hidden" id="statsPanel">
+      <div class="card-meta">
+        <span id="statsTitle"></span>
+        <button class="btn btn-ghost" id="statsBack">&#8592; Terug</button>
+      </div>
+      <div id="statsBody"></div>
+    </div>
+
     <div id="practiceArea" hidden>
       <div class="card-meta">
         <span id="stageLabel">Oefenen</span>
@@ -512,14 +533,26 @@ function currentPos(expected, typed) {
   while (i < typed.length && i < expected.length && typed[i] === expected[i]) i++;
   return i;
 }
+function trend(prev, last) {
+  return {
+    durDelta: last.dur - prev.dur,
+    autoDelta: last.auto - prev.auto,
+    faster: last.dur < prev.dur,
+    fewerAuto: last.auto < prev.auto
+  };
+}
 // PURE-END
 
 const LS_DECK = 'typen.deck.v1';
 const LS_MUTED = 'typen.muted';
 const LS_DELAY = 'typen.autoDelay';
+const LS_STATS = 'typen.stats.v1';
 const $ = (id) => document.getElementById(id);
 
+function uid() { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
 let deck = loadDeck();
+let stats = loadStats();
 let queue = [];
 let session = null;
 let score = 0;
@@ -537,10 +570,21 @@ function loadDeck() {
   try {
     const raw = localStorage.getItem(LS_DECK);
     const arr = raw ? JSON.parse(raw) : [];
-    return Array.isArray(arr) ? arr.filter(c => c && c.q && c.a) : [];
+    const list = Array.isArray(arr) ? arr.filter(c => c && c.q && c.a) : [];
+    let changed = false;
+    list.forEach(c => { if (!c.id) { c.id = uid(); changed = true; } });
+    if (changed) saveDeck();
+    return list;
   } catch (e) { return []; }
 }
 function saveDeck() { localStorage.setItem(LS_DECK, JSON.stringify(deck)); }
+function loadStats() {
+  try {
+    const o = JSON.parse(localStorage.getItem(LS_STATS) || '{}');
+    return o && typeof o === 'object' && !Array.isArray(o) ? o : {};
+  } catch (e) { return {}; }
+}
+function saveStats() { localStorage.setItem(LS_STATS, JSON.stringify(stats)); }
 
 /* ---- geluid (WebAudio, geen bestanden) ---- */
 let audioCtx = null;
@@ -631,13 +675,19 @@ function renderDeck() {
     da.textContent = c.a;
     grow.appendChild(dq);
     grow.appendChild(da);
+    const st = document.createElement('button');
+    st.className = 'del stat-btn';
+    st.textContent = '\u{1F4CA}';
+    st.title = 'Statistieken van deze kaart';
+    st.onclick = () => showStats(c.id);
     const del = document.createElement('button');
     del.className = 'del';
     del.textContent = '\u00d7';
     del.title = 'Verwijder deze kaart';
-    del.onclick = () => { deck.splice(i, 1); saveDeck(); renderDeck(); };
+    del.onclick = () => { delete stats[c.id]; saveStats(); deck.splice(i, 1); saveDeck(); renderDeck(); };
     item.appendChild(nr);
     item.appendChild(grow);
+    item.appendChild(st);
     item.appendChild(del);
     list.appendChild(item);
   });
@@ -656,7 +706,7 @@ function addCard(e) {
     setTimeout(() => $('deckPanel').classList.remove('shake'), 340);
     return false;
   }
-  deck.push({ q, a });
+  deck.push({ q, a, id: uid() });
   saveDeck();
   $('qInput').value = '';
   $('aInput').value = '';
@@ -676,7 +726,11 @@ $('sampleBtn').onclick = () => {
   $('aInput').value = 'De hoofdstad van Frankrijk is Parijs.';
   $('qInput').focus();
 };
-$('clearBtn').onclick = () => { deck = []; saveDeck(); renderDeck(); };
+$('clearBtn').onclick = () => { deck = []; stats = {}; saveStats(); saveDeck(); renderDeck(); };
+$('statsBack').onclick = () => {
+  $('statsPanel').classList.add('hidden');
+  $('deckPanel').classList.remove('hidden');
+};
 $('startBtn').onclick = () => startSession(deck);
 $('retryBtn').onclick = () => startSession(deck);
 $('retryAutoBtn').onclick = () => {
@@ -685,6 +739,7 @@ $('retryAutoBtn').onclick = () => {
 };
 $('backBtn').onclick = () => {
   $('resultPanel').classList.add('hidden');
+  $('statsPanel').classList.add('hidden');
   $('practiceArea').hidden = true;
   $('deckPanel').classList.remove('hidden');
   clearTimeout(idleTimer);
@@ -838,6 +893,7 @@ function startSession(cards) {
   paused = false;
   cancelReveal();
   $('pauseMask').classList.add('hidden');
+  $('statsPanel').classList.add('hidden');
   $('pauseBtn').innerHTML = '&#9208;&#65039; Pauzeer';
   updateScore(false);
   $('streak').textContent = '';
@@ -855,6 +911,7 @@ function nextItem() {
   if (!item) { finishSession(); return; }
   session = item;
   session.prev = [];
+  session.startedAt = Date.now();
   $('nextBtn').classList.add('hidden');
   $('statusLine').textContent = '';
   $('typeInput').value = '';
@@ -928,9 +985,23 @@ function updateScore(pop) {
   }
 }
 
+function recordAttempt(it) {
+  if (!it.card.id) it.card.id = uid();
+  const arr = stats[it.card.id] || (stats[it.card.id] = []);
+  arr.push({
+    t: Date.now(),
+    dur: Math.max(1, Math.round((Date.now() - (it.startedAt || Date.now())) / 1000)),
+    auto: it.autoIdx.size,
+    perfect: it.autoIdx.size === 0
+  });
+  if (arr.length > 100) arr.shift();
+  saveStats();
+}
+
 function completeCard() {
   session.done = true;
   clearTimeout(idleTimer);
+  recordAttempt(session);
   const perfect = session.autoIdx.size === 0;
   if (perfect) {
     streak++;
@@ -989,8 +1060,97 @@ function finishSession() {
     ra.textContent = it.card.a;
     div.appendChild(rq);
     div.appendChild(ra);
+    const st = stats[it.card.id] || [];
+    if (st.length) {
+      const lastA = st[st.length - 1];
+      const prevA = st.length > 1 ? st[st.length - 2] : null;
+      let txt = 'Poging ' + st.length + ' van deze kaart \u00b7 ' + fmtDur(lastA.dur) + (lastA.auto ? ' \u00b7 ' + lastA.auto + ' auto' : ' \u00b7 perfect');
+      if (prevA) {
+        const d = trend(prevA, lastA);
+        if (d.durDelta !== 0) txt += ' \u00b7 ' + fmtDur(Math.abs(d.durDelta)) + (d.faster ? ' sneller \u23f1' : ' langzamer');
+        if (d.autoDelta !== 0) txt += ' \u00b7 ' + Math.abs(d.autoDelta) + (d.fewerAuto ? (d.autoDelta === -1 ? ' auto-woord minder' : ' auto-woorden minder') : (d.autoDelta === 1 ? ' auto-woord meer' : ' auto-woorden meer'));
+      }
+      const line = document.createElement('div');
+      line.className = 'ra';
+      line.textContent = txt;
+      div.appendChild(line);
+    }
     review.appendChild(div);
   });
+}
+
+function fmtDur(s) { return s < 60 ? s + 's' : Math.floor(s / 60) + 'm ' + (s % 60) + 's'; }
+function fmtTime(t) {
+  const d = new Date(t);
+  return d.toLocaleDateString('nl-NL') + ' ' + d.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+}
+
+function showStats(id) {
+  const card = deck.find(c => c.id === id);
+  if (!card) return;
+  const arr = (stats[id] || []).slice();
+  $('statsTitle').textContent = '\u{1F4CA} ' + card.q;
+  const body = $('statsBody');
+  body.innerHTML = '';
+  if (!arr.length) {
+    const p = document.createElement('p');
+    p.className = 'stats-empty';
+    p.textContent = 'Nog geen statistieken \u2014 oefen deze kaart eerst een paar keer.';
+    body.appendChild(p);
+  } else {
+    const last = arr[arr.length - 1];
+    const prev = arr.length > 1 ? arr[arr.length - 2] : null;
+    const best = Math.min.apply(null, arr.map(a => a.dur));
+    const avg = Math.round(arr.reduce((s, a) => s + a.dur, 0) / arr.length);
+    const tr = document.createElement('div');
+    if (prev) {
+      const d = trend(prev, last);
+      const parts = [];
+      if (d.durDelta !== 0) parts.push(fmtDur(Math.abs(d.durDelta)) + (d.faster ? ' sneller' : ' langzamer'));
+      if (d.autoDelta !== 0) parts.push(Math.abs(d.autoDelta) + (d.fewerAuto ? (d.autoDelta === -1 ? ' auto-woord minder' : ' auto-woorden minder') : (d.autoDelta === 1 ? ' auto-woord meer' : ' auto-woorden meer')));
+      const improved = (d.faster && d.autoDelta <= 0) || (d.fewerAuto && d.durDelta <= 0);
+      tr.className = 'trend ' + (improved ? 'up' : 'down');
+      tr.textContent = 'Trend vs vorige keer: ' + (parts.length ? parts.join(' \u00b7 ') : 'gelijk');
+    } else {
+      tr.className = 'trend';
+      tr.textContent = 'Eerste poging: ' + fmtDur(last.dur) + (last.auto ? ' \u00b7 ' + last.auto + ' auto' : ' \u00b7 perfect');
+    }
+    body.appendChild(tr);
+    const sum = document.createElement('div');
+    sum.className = 'stats-summary';
+    [['Pogingen', String(arr.length)], ['Snelste', fmtDur(best)], ['Gemiddeld', fmtDur(avg)], ['Laatste', fmtDur(last.dur) + (last.auto ? ' \u00b7 ' + last.auto + ' auto' : ' \u00b7 perfect')]].forEach(([k, v]) => {
+      const s = document.createElement('span');
+      s.appendChild(document.createTextNode(k + ': '));
+      const b = document.createElement('b');
+      b.textContent = v;
+      s.appendChild(b);
+      sum.appendChild(s);
+    });
+    body.appendChild(sum);
+    const max = Math.max.apply(null, arr.map(a => a.dur)) || 1;
+    arr.forEach((a, i) => {
+      const row = document.createElement('div');
+      row.className = 'stat-row' + (a.perfect ? ' perfect' : '');
+      const lbl = document.createElement('span');
+      lbl.className = 'lbl';
+      lbl.textContent = 'P' + (i + 1) + ' \u00b7 ' + fmtTime(a.t);
+      const track = document.createElement('div');
+      track.className = 'stat-bar-track';
+      const bar = document.createElement('div');
+      bar.className = 'stat-bar';
+      bar.style.width = Math.max(6, Math.round((a.dur / max) * 100)) + '%';
+      track.appendChild(bar);
+      const val = document.createElement('span');
+      val.className = 'val';
+      val.textContent = fmtDur(a.dur) + (a.auto ? ' \u00b7 ' + a.auto + ' auto' : ' \u00b7 perfect');
+      row.appendChild(lbl);
+      row.appendChild(track);
+      row.appendChild(val);
+      body.appendChild(row);
+    });
+  }
+  $('deckPanel').classList.add('hidden');
+  $('statsPanel').classList.remove('hidden');
 }
 
 renderDeck();
