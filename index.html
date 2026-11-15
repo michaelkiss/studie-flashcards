@@ -274,7 +274,7 @@ function parseMarkdown(text) {
   let card = null;
   for (const line of lines) {
     const h2 = line.match(/^##\s+(.+?)\s*$/);
-    if (h2) { section = h2[1]; card = null; continue; }
+    if (h2) { if (card) cards.push(card); section = h2[1]; card = null; continue; }
     const q = line.match(/^\*\*(V\d+)\.\s*(.+?)\*\*\s*$/);
     if (q) {
       if (card) cards.push(card);

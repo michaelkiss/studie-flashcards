@@ -156,6 +156,7 @@
       </svg>
       <h2>Nog geen vragenbestand geladen</h2>
       <p>Sleep je meerkeuze-<code>.md</code>-bestand hierheen, of kies het via de knop rechtsboven.</p>
+      <p class="setup-info" id="loadMsg" style="color: var(--terracotta-dark); font-weight: 600;"></p>
       <button class="btn btn-primary" id="emptyLoadBtn">Kies bestand</button>
     </div>
 
@@ -207,14 +208,14 @@ function parseMcMarkdown(text) {
   const questions = [];
   let q = null;
   const flush = () => {
-    if (q && q.options.length === 4 && q.answer) {
+    if (q && q.options.length >= 2 && q.options.length <= 8 && q.answer) {
       q.text = q.text.join(' ').trim();
       questions.push(q);
     }
     q = null;
   };
   for (const line of lines) {
-    const h = line.match(/^#{1,2}\s+(.+?)\s*$/);
+    const h = line.match(/^#{1,4}\s+(.+?)\s*$/);
     if (h) {
       if (/^Vraag\s+\d+$/i.test(h[1])) {
         flush();
@@ -227,9 +228,16 @@ function parseMcMarkdown(text) {
     if (!q) continue;
     let m;
     if ((m = line.match(/^\*\*Hoofdstuk:\*\*\s*(.+)$/))) { q.meta = m[1].trim(); continue; }
-    if ((m = line.match(/^\*\*Antwoord:\*\*\s*([A-Da-d])\s*$/))) { q.answer = m[1].toUpperCase(); continue; }
+    if ((m = line.match(/^\*\*Antwoord:\*\*\s*([A-Ha-h])\b\s*(.*)$/))) {
+      q.answer = m[1].toUpperCase();
+      if (m[2] && !q.explanation) q.explanation = m[2].trim();
+      continue;
+    }
     if ((m = line.match(/^\*\*Uitleg:\*\*\s*(.+)$/))) { q.explanation = m[1]; continue; }
-    if ((m = line.match(/^-\s*([A-Da-d])\)\s*(.+)$/))) { q.options.push({ letter: m[1].toUpperCase(), text: m[2] }); continue; }
+    if ((m = line.match(/^[-*]\s*([A-Ha-h])\s*[\)\.\-:]\s*(.+)$/)) || (m = line.match(/^([A-Ha-h])\s*[\)\.]\s+(.+)$/))) {
+      q.options.push({ letter: m[1].toUpperCase(), text: m[2].trim() });
+      continue;
+    }
     if (line.trim()) q.text.push(line.trim());
   }
   flush();
@@ -273,13 +281,27 @@ if (typeof document !== 'undefined') {
 
   async function addFiles(fileList) {
     const files = [...fileList].filter((f) => /\.(md|markdown|txt)$/i.test(f.name)).sort((a, b) => a.name.localeCompare(b.name));
+    const zero = [];
+    let qaHint = false;
     for (const f of files) {
-      const parsed = parseMcMarkdown(await f.text());
+      const text = await f.text();
+      if (/\*\*V\d+\./i.test(text)) qaHint = true;
+      const parsed = parseMcMarkdown(text);
+      if (!parsed.length) { zero.push(f.name); continue; }
       allQuestions = allQuestions.concat(parsed.map((q) => ({ ...q, file: f.name })));
     }
     if (allQuestions.length) {
-      setupInfo.textContent = allQuestions.length + ' vragen geladen (' + [...new Set(allQuestions.map((q) => q.file))].join(', ') + '). Kies hieronder het aantal vragen.';
+      let msg = allQuestions.length + ' vragen geladen (' + [...new Set(allQuestions.map((q) => q.file))].join(', ') + '). Kies hieronder het aantal vragen.';
+      if (zero.length) msg += ' Niet herkend (geen MC-vragen): ' + zero.join(', ') + '.';
+      setupInfo.textContent = msg;
+      $('loadMsg').textContent = '';
       show(setupPanel);
+    } else {
+      let msg = 'Geen meerkeuzevragen herkend in: ' + (files.map((f) => f.name).join(', ') || 'de gekozen bestanden') + '.';
+      msg += ' Verwacht per vraag: een kop "## Vraag 1" (t/m ####), de vraagtekst, 2\u20138 opties als "- A) \u2026", en "**Antwoord:** A".';
+      if (qaHint) msg += ' Dit bestand lijkt Q&A-formaat (**V1. \u2026**) \u2014 daarvoor gebruik je de Flashcards-pagina (index.html).';
+      $('loadMsg').textContent = msg;
+      show(emptyState);
     }
   }
 
@@ -301,7 +323,7 @@ if (typeof document !== 'undefined') {
     qMeta.textContent = (q.file ? q.file.replace(/\.md$/i, '') + ' — ' : '') + (q.meta || '');
     questionEl.innerHTML = inlineMd(q.text);
     optionsEl.innerHTML = '';
-    const letters = ['A', 'B', 'C', 'D'];
+    const letters = 'ABCDEFGHIJ'.split('');
     shuffle(q.options).forEach((opt, i) => {
       const btn = document.createElement('button');
       btn.className = 'option';
@@ -333,7 +355,7 @@ if (typeof document !== 'undefined') {
       const a = answers[i];
       const item = document.createElement('div');
       item.className = 'review-item';
-      const correctOpt = q.options.find((o) => o.letter === q.answer);
+      const correctOpt = q.options.find((o) => o.letter === q.answer) || { letter: q.answer, text: '' };
       const ok = a && a.correct;
       let html = '<div class="rq">' + (i + 1) + '. ' + inlineMd(q.text) +
         '<span class="badge ' + (ok ? 'ok' : 'wrong') + '">' + (ok ? 'JUIST' : 'FOUT') + '</span></div>';
